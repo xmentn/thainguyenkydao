@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thái Nguyên Kỳ Đạo</title>
+    <link rel="icon" type="image/png" href="images/Logo CLB.png" />
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+
+    <div id="home-container">
+      <div class="text-center mb-5 mt-4">
+        <img
+          src="https://drive.google.com/thumbnail?id=1YI9ktkzuFoP6rPeAMOwlAQ2KEdBsVHoz&sz=w1000"
+          class="logo-login mb-3"
+          style="width: 150px; height: 150px"
+        />
+        <h2 class="fw-bold text-primary text-uppercase mb-2">
+          CLB CỜ TƯỚNG<br />THÁI NGUYÊN KỲ ĐẠO
+        </h2>
+        <p class="text-muted">Nơi hội tụ đam mê - Giao lưu - Phát triển</p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="card module-card" onclick="moGiaiDau()">
+            <div class="module-icon-box bg-giai-dau">
+              <i class="fas fa-trophy"></i>
+            </div>
+            <div class="card-body text-center p-4">
+              <h4 class="fw-bold text-dark mb-2">CÁC GIẢI ĐẤU</h4>
+              <p class="text-muted small mb-0">
+                Thông tin, kết quả, bốc thăm và hình ảnh các giải đấu của Câu
+                lạc bộ.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card module-card" onclick="moQuanLyQuy()">
+            <div class="module-icon-box bg-quy-clb">
+              <i class="fas fa-piggy-bank"></i>
+            </div>
+            <div class="card-body text-center p-4">
+              <h4 class="fw-bold text-dark mb-2">QUỸ CÂU LẠC BỘ</h4>
+              <p class="text-muted small mb-0">
+                Hệ thống quản lý thu chi, tài trợ và bảng vàng đóng góp minh
+                bạch.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tour-container" style="display: none">
+      <div
+        class="header mb-4"
+        style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%)"
+      >
+        <div class="d-flex align-items-center justify-content-center">
+          <div
+            class="bg-white rounded-circle d-flex align-items-center justify-content-center me-3"
+            style="width: 50px; height: 50px"
+          >
+            <i class="fas fa-trophy fa-2x text-warning"></i>
+          </div>
+          <div class="text-start">
+            <h6
+              class="mb-0 text-uppercase opacity-75 text-white"
+              style="font-size: 0.7rem"
+            >
+              Hệ thống thi đấu
+            </h6>
+            <h4 class="fw-bold mb-0 text-white">CÁC GIẢI ĐẤU</h4>
+          </div>
+        </div>
+        <div class="position-absolute top-0 end-0 mt-3 me-3">
+          <button
+            onclick="veTrangChuCLB()"
+            class="btn btn-sm text-white opacity-75"
+            title="Về Sảnh chính"
+          >
+            <i class="fas fa-home fa-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="container" style="max-width: 900px">
+        <div id="btn-admin-tour" class="text-end mb-3" style="display: none">
+          <button
+            class="btn btn-primary fw-bold rounded-pill shadow-sm"
+            onclick="moModalThemGiaiDau()"
+          >
+            <i class="fas fa-plus-circle me-2"></i>Thêm Giải Đấu Mới
+          </button>
+        </div>
+
+        <div class="card card-box p-0 overflow-hidden mb-5">
+          <div class="card card-box p-0 overflow-hidden mb-5">
+            <table class="table table-bordered mb-0 table-hover align-middle">
+              <thead class="bg-warning text-dark border-warning">
+                <tr>
+                  <th class="text-center py-3">Tên Giải Đấu</th>
+                  <th class="text-center py-3">Đơn vị tổ chức</th>
+                  <th class="text-center py-3">Thời gian</th>
+                  <th class="text-center py-3">Tham gia</th>
+                  <th
+                    class="text-center py-3"
+                    id="col-admin-action"
+                    style="display: none"
+                  >
+                    Quản lý
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="danhSachGiaiDau">
+                <tr>
+                  <td colspan="4" class="text-center py-4 text-muted">
+                    Đang tải dữ liệu giải đấu...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="login-container" style="display: none">
+      <div class="card card-box p-4 pt-5">
+        <button
+          class="btn btn-sm btn-light position-absolute top-0 start-0 m-3"
+          onclick="veTrangChuCLB()"
+          title="Về trang chủ"
+        >
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="text-center mb-4">
+          <img
+            src="https://drive.google.com/thumbnail?id=1YI9ktkzuFoP6rPeAMOwlAQ2KEdBsVHoz&sz=w1000"
+            class="logo-login mb-3"
+          />
+          <h5 class="fw-bold text-dark text-uppercase">
+            CLB CỜ TƯỚNG<br />THÁI NGUYÊN KỲ ĐẠO
+          </h5>
+          <span class="badge bg-primary mt-2">QUẢN LÝ QUỸ</span>
+        </div>
+        <form onsubmit="xuLyDangNhap(event)">
+          <div class="mb-3">
+            <input
+              type="text"
+              id="username"
+              class="form-control py-2"
+              placeholder="Tên đăng nhập"
+              required
+            />
+          </div>
+          <div class="mb-4">
+            <input
+              type="password"
+              id="password"
+              class="form-control py-2"
+              placeholder="Mật khẩu"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary w-100 fw-bold py-2 shadow-sm"
+            id="btnLogin"
+          >
+            ĐĂNG NHẬP <i class="fas fa-arrow-right ms-2"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div id="app-container" style="display: none">
+      <div class="header mb-4">
+        <div class="d-flex align-items-center justify-content-center">
+          <img
+            src="https://drive.google.com/thumbnail?id=1YI9ktkzuFoP6rPeAMOwlAQ2KEdBsVHoz&sz=w1000"
+            class="logo-header me-3"
+          />
+          <div class="text-start">
+            <h6
+              class="mb-0 text-uppercase opacity-75"
+              style="font-size: 0.7rem"
+            >
+              Quản lý quỹ
+            </h6>
+            <h4 class="fw-bold mb-0">THÁI NGUYÊN KỲ ĐẠO</h4>
+          </div>
+        </div>
+        <div class="position-absolute top-0 end-0 mt-3 me-3">
+          <button
+            onclick="veTrangChuCLB()"
+            class="btn btn-sm text-white opacity-75 me-2"
+            title="Về Sảnh chính"
+          >
+            <i class="fas fa-home fa-lg"></i>
+          </button>
+          <button
+            onclick="dangXuat()"
+            class="btn btn-sm text-white opacity-75"
+            title="Đăng xuất"
+          >
+            <i class="fas fa-sign-out-alt fa-lg"></i>
+          </button>
+        </div>
+        <div class="text-center mt-2">
+          <span class="badge bg-white text-primary rounded-pill shadow-sm px-3">
+            <i class="fas fa-user-circle me-1"></i> Xin chào,
+            <span id="user-name">...</span>
+          </span>
+        </div>
+
+        <div
+          id="live-clock"
+          class="text-center text-white mt-2 small opacity-75"
+          style="font-weight: 500; letter-spacing: 0.5px"
+        >
+          Đang tải giờ...
+        </div>
+      </div>
+
+      <div class="container" style="max-width: 900px">
+        <div id="view-dashboard">
+          <div class="card card-box bg-white mb-3 p-3 text-center">
+            <span class="text-muted text-uppercase small fw-bold"
+              >Tồn Quỹ Hiện Tại</span
+            >
+            <div id="dash-tonquy" class="display-5 fw-bold text-primary my-1">
+              ...
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <div class="card card-box bg-white p-3 h-100">
+                <h6 class="text-center text-muted small fw-bold mb-2">
+                  TỔNG THU - CHI
+                </h6>
+                <div class="chart-container">
+                  <canvas id="bieuDoTron"></canvas>
+                </div>
+                <div class="row mt-2 text-center">
+                  <div class="col-6 border-end">
+                    <small class="text-success fw-bold">Thu</small>
+                    <div id="dash-thu" class="fw-bold small">...</div>
+                  </div>
+                  <div class="col-6">
+                    <small class="text-danger fw-bold">Chi</small>
+                    <div id="dash-chi" class="fw-bold small">...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="card card-box bg-white p-3 h-100">
+                <h6 class="text-center text-muted small fw-bold mb-2">
+                  CƠ CẤU NGUỒN THU
+                </h6>
+                <div class="chart-container">
+                  <canvas id="bieuDoNguonThu"></canvas>
+                </div>
+                <div class="mt-2 text-center small text-muted fst-italic">
+                  * Tỷ lệ các khoản thu nhập
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-box bg-white mb-4">
+            <div class="card-header bg-white border-0 pt-3 pb-0">
+              <h6 class="text-center text-primary fw-bold text-uppercase">
+                <i class="fas fa-crown text-warning me-2"></i>Bảng Vàng Tài Trợ
+              </h6>
+            </div>
+            <div class="card-body p-0">
+              <ul class="list-group list-group-flush" id="list-top10">
+                <li class="list-group-item text-center text-muted small py-4">
+                  Đang tải dữ liệu...
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card card-box bg-white mb-4">
+            <div
+              class="card-header bg-success bg-opacity-10 border-0 pt-3 pb-0"
+            >
+              <h6 class="text-center text-success fw-bold text-uppercase">
+                <i class="fas fa-gift me-2"></i>Ủng Hộ Hiện Vật
+              </h6>
+            </div>
+            <div class="card-body p-0">
+              <ul class="list-group list-group-flush" id="list-hienvat">
+                <li class="list-group-item text-center text-muted small py-4">
+                  Đang tải dữ liệu...
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <h6 class="text-muted fw-bold mb-3 ms-2 small text-uppercase">
+            Menu chức năng
+          </h6>
+          <button
+            class="btn btn-primary btn-menu admin-only"
+            onclick="chuyenManHinh('form')"
+            style="
+              background-color: #2962ff !important;
+              display: flex !important;
+            "
+          >
+            <i class="fas fa-plus-circle fa-lg me-3"></i> NHẬP THU / CHI
+          </button>
+          <button
+            class="btn btn-warning btn-menu text-dark"
+            onclick="chuyenManHinh('search')"
+            style="background-color: #ffc107 !important"
+          >
+            <i class="fas fa-search fa-lg me-3"></i> TRA CỨU & BÁO CÁO
+          </button>
+          <button
+            class="btn btn-secondary btn-menu admin-only text-white"
+            onclick="saoLuuDuLieu()"
+            style="
+              background-color: #6c757d !important;
+              display: flex !important;
+            "
+          >
+            <i class="fas fa-database fa-lg me-3"></i> SAO LƯU DỮ LIỆU
+          </button>
+        </div>
+
+        <div id="view-form" style="display: none">
+          <button
+            class="btn btn-light mb-3 rounded-pill px-4 fw-bold text-muted shadow-sm"
+            onclick="chuyenManHinh('dashboard')"
+          >
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+          </button>
+          <div class="card card-box p-4 bg-white">
+            <h5 class="text-center text-primary fw-bold mb-4">
+              NHẬP GIAO DỊCH
+            </h5>
+            <form id="myForm" onsubmit="handleFormSubmit(event)">
+              <div class="mb-4 text-center">
+                <div class="btn-group w-100 p-1 bg-light rounded-pill">
+                  <input
+                    type="radio"
+                    class="btn-check"
+                    name="loaiGiaoDich"
+                    id="rt1"
+                    value="Thu"
+                    checked
+                  />
+                  <label
+                    class="btn btn-outline-success rounded-pill border-0 fw-bold"
+                    for="rt1"
+                    >THU (+)</label
+                  >
+                  <input
+                    type="radio"
+                    class="btn-check"
+                    name="loaiGiaoDich"
+                    id="rt2"
+                    value="Chi"
+                  />
+                  <label
+                    class="btn btn-outline-danger rounded-pill border-0 fw-bold"
+                    for="rt2"
+                    >CHI (-)</label
+                  >
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-6 mb-3">
+                  <label class="small fw-bold text-muted">Ngày</label>
+                  <input
+                    type="date"
+                    class="form-control"
+                    id="datePicker"
+                    required
+                  />
+                </div>
+                <div class="col-6 mb-3">
+                  <label class="small fw-bold text-muted">Tiền</label>
+                  <input
+                    type="number"
+                    class="form-control fw-bold text-primary"
+                    id="soTien"
+                    required
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="small fw-bold text-muted">Nội dung</label>
+                <select class="form-select" id="hangMuc" required>
+                  <option value="" selected disabled>
+                    -- Chọn nội dung --
+                  </option>
+                  <optgroup label="CHI PHÍ (-)">
+                    <option value="Chi tiền thưởng">Chi tiền thưởng</option>
+                    <option value="Chi mua cúp, cờ">Mua cúp, cờ</option>
+                    <option value="Chi mua cờ lưu niệm">Mua cờ lưu niệm</option>
+                    <option value="Liên hoan, ăn uống">Liên hoan</option>
+                    <option value="Mua nước uống">Mua nước uống</option>
+                    <option value="Chi thuê sân bãi">Thuê sân bãi</option>
+                    <option value="Chi khác">Chi khác</option>
+                  </optgroup>
+                  <optgroup label="NGUỒN THU (+)">
+                    <option value="Đóng quỹ hội viên">Đóng quỹ hội viên</option>
+                    <option value="Tài trợ / Ủng hộ">Tài trợ / Ủng hộ</option>
+                    <option value="Thu khác">Thu khác</option>
+                    <option value="Tài trợ hiện vật">
+                      🎁 Tài trợ hiện vật
+                    </option>
+                  </optgroup>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="small fw-bold text-muted">Người nộp/nhận</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="nguoiLienQuan"
+                  required
+                />
+              </div>
+              <div class="mb-4">
+                <label class="small fw-bold text-muted">Ghi chú</label>
+                <textarea class="form-control" id="ghiChu"></textarea>
+              </div>
+              <button
+                type="submit"
+                class="btn btn-primary w-100 py-3 rounded-3 fw-bold shadow-sm"
+                id="btnLuu"
+              >
+                LƯU DỮ LIỆU
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div id="view-search" style="display: none">
+          <button
+            class="btn btn-light mb-3 rounded-pill px-4 fw-bold text-muted shadow-sm"
+            onclick="chuyenManHinh('dashboard')"
+          >
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+          </button>
+          <div class="card card-box p-3 mb-3 bg-white">
+            <h6 class="fw-bold text-center mb-3">TRA CỨU GIAO DỊCH</h6>
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="small text-muted fw-bold">Từ ngày</label>
+                <input type="date" id="searchTuNgay" class="form-control" />
+              </div>
+              <div class="col-6">
+                <label class="small text-muted fw-bold">Đến ngày</label>
+                <input type="date" id="searchDenNgay" class="form-control" />
+              </div>
+
+              <div class="col-12">
+                <label class="small text-muted fw-bold">Loại phiếu</label>
+                <select id="searchLoai" class="form-select">
+                  <option value="Thu">Chỉ xem Phiếu Thu</option>
+                  <option value="Chi">Chỉ xem Phiếu Chi</option>
+                  <option value="Tất cả">Tất cả (Thu & Chi)</option>
+                </select>
+              </div>
+
+              <div class="col-12">
+                <label class="small text-muted fw-bold"
+                  >Tìm theo tên người</label
+                >
+                <input
+                  type="text"
+                  id="searchTen"
+                  class="form-control"
+                  placeholder="Ví dụ: Hùng, Lan..."
+                />
+              </div>
+
+              <div class="col-8">
+                <button
+                  class="btn btn-warning w-100 fw-bold mt-2 text-dark"
+                  onclick="thucHienTimKiem()"
+                >
+                  <i class="fas fa-search me-2"></i>TÌM KIẾM
+                </button>
+              </div>
+              <div class="col-4">
+                <button
+                  class="btn btn-success w-100 fw-bold mt-2"
+                  onclick="inBaoCao()"
+                  id="btnIn"
+                  disabled
+                >
+                  <i class="fas fa-print"></i> IN
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="ketQuaTongHop" class="mb-2"></div>
+          <div id="ketQuaTimKiem"></div>
+
+          <div
+            id="btnXemTiepContainer"
+            class="text-center mt-3"
+            style="display: none"
+          >
+            <button
+              class="btn btn-outline-primary rounded-pill px-4 fw-bold"
+              onclick="xemThemKetQua()"
+            >
+              Xem tiếp 20 dòng nữa <i class="fas fa-chevron-down ms-1"></i>
+            </button>
+            <div class="text-muted small mt-1">
+              Đang hiển thị <span id="lblDaHienThi">0</span> /
+              <span id="lblTongSo">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="modalSua" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title fw-bold">
+              <i class="fas fa-edit me-2"></i>Sửa Giao Dịch
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="formEdit">
+              <input type="hidden" id="idEdit" />
+              <div class="row mb-3">
+                <div class="col-6">
+                  <label class="small fw-bold text-muted">Ngày tháng</label>
+                  <input type="date" class="form-control" id="ngayThangEdit" />
+                </div>
+                <div class="col-6">
+                  <label class="small fw-bold text-muted">Loại</label>
+                  <select class="form-select" id="loaiGiaoDichEdit">
+                    <option value="Thu">Thu</option>
+                    <option value="Chi">Chi</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="small fw-bold text-muted">Nội dung</label>
+                <select class="form-select" id="hangMucEdit">
+                  <optgroup label="CHI PHÍ (-)">
+                    <option value="Chi tiền thưởng">Chi tiền thưởng</option>
+                    <option value="Chi mua cúp, cờ">Mua cúp, cờ</option>
+                    <option value="Chi mua cờ lưu niệm">Mua cờ lưu niệm</option>
+                    <option value="Liên hoan, ăn uống">Liên hoan</option>
+                    <option value="Mua nước uống">Mua nước uống</option>
+                    <option value="Chi thuê sân bãi">Thuê sân bãi</option>
+                    <option value="Chi khác">Chi khác</option>
+                  </optgroup>
+                  <optgroup label="NGUỒN THU (+)">
+                    <option value="Đóng quỹ hội viên">Đóng quỹ hội viên</option>
+                    <option value="Tài trợ / Ủng hộ">Tài trợ / Ủng hộ</option>
+                    <option value="Thu khác">Thu khác</option>
+                    <option value="Tài trợ hiện vật">
+                      🎁 Tài trợ hiện vật
+                    </option>
+                  </optgroup>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="small fw-bold text-muted">Số tiền</label>
+                <input
+                  type="number"
+                  class="form-control fw-bold text-primary"
+                  id="soTienEdit"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label class="small fw-bold text-muted">Người nộp/nhận</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="nguoiLienQuanEdit"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label class="small fw-bold text-muted">Ghi chú</label>
+                <textarea
+                  class="form-control"
+                  id="ghiChuEdit"
+                  rows="2"
+                ></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+              Hủy
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary fw-bold"
+              onclick="luuSua()"
+            >
+              Cập nhật
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="modalGiaiDau" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header bg-warning text-dark">
+            <h5 class="modal-title fw-bold" id="modalGiaiDauTitle">
+              <i class="fas fa-trophy me-2"></i>Thông tin Giải Đấu
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="formGiaiDau">
+              <input type="hidden" id="isEditGiaiDau" value="false" />
+
+              <div class="mb-3">
+                <label class="small fw-bold text-muted"
+                  >Mã giải đấu (Tùy chọn)</label
+                >
+                <input
+                  type="text"
+                  class="form-control bg-light"
+                  id="maGiaiDau"
+                  placeholder="Để trống hệ thống sẽ tự tạo"
+                />
+                <small class="text-muted" style="font-size: 11px"
+                  >Dùng để làm mã viết tắt, ví dụ: TNKD-2026</small
+                >
+              </div>
+
+              <div class="mb-3">
+                <label class="small fw-bold text-muted">Tên Giải Đấu (*)</label>
+                <input
+                  type="text"
+                  class="form-control border-primary"
+                  id="tenGiaiDau"
+                  required
+                  placeholder="Ví dụ: Giải Cờ tướng Mùa Xuân"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label class="small fw-bold text-muted">Đơn vị tổ chức</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="donViToChuc"
+                  placeholder="Ví dụ: CLB Thái Nguyên Kỳ Đạo"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label class="small fw-bold text-muted"
+                  >Thời gian tổ chức</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="thoiGianGiaiDau"
+                  placeholder="Ví dụ: Tháng 02/2026"
+                />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+              Hủy
+            </button>
+            <button
+              type="button"
+              class="btn btn-warning fw-bold text-dark"
+              onclick="luuGiaiDau()"
+            >
+              Lưu thông tin
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="modalDangKy" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title fw-bold">
+              <i class="fas fa-user-plus me-2"></i>Đăng ký thi đấu
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="formDangKy" onsubmit="xacNhanDangKy(event)">
+              <input type="hidden" id="dk_maGiai" />
+
+              <div class="mb-3">
+                <label class="small fw-bold text-muted">Giải đấu</label>
+                <input
+                  type="text"
+                  class="form-control bg-light fw-bold text-primary"
+                  id="dk_tenGiai"
+                  readonly
+                />
+              </div>
+
+              <div class="mb-3">
+                <label class="small fw-bold text-muted">Tên Kỳ thủ (*)</label>
+                <input
+                  type="text"
+                  class="form-control border-success"
+                  id="dk_tenKyThu"
+                  required
+                  placeholder="Nhập họ và tên..."
+                />
+              </div>
+
+              <div class="mb-4">
+                <label class="small fw-bold text-muted"
+                  >Thuộc CLB / Đơn vị</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="dk_clb"
+                  placeholder="Ví dụ: CLB Sông Công, Tự do..."
+                />
+              </div>
+
+              <button
+                type="submit"
+                class="btn btn-success w-100 py-2 fw-bold shadow-sm"
+                id="btnSubmitDangKy"
+              >
+                XÁC NHẬN ĐĂNG KÝ
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="modalDanhSachKyThu" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title fw-bold">
+              <i class="fas fa-users me-2"></i>Danh sách đăng ký
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body p-0">
+            <div class="p-3 bg-light border-bottom">
+              <h6 class="mb-0 fw-bold text-primary" id="ds_tenGiai">
+                Tên giải...
+              </h6>
+            </div>
+            <div style="max-height: 400px; overflow-y: auto">
+              <table class="table table-bordered table-hover mb-0 align-middle">
+                <thead class="table-light sticky-top text-center">
+                  <tr>
+                    <th style="width: 50px">STT</th>
+                    <th>Tên Kỳ thủ</th>
+                    <th>CLB / Đơn vị</th>
+                    <th
+                      id="col-admin-xoa-kythu"
+                      style="display: none; width: 60px"
+                    >
+                      Hủy
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="bangDanhSachKyThu"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <span class="text-muted small me-auto"
+              >Tổng số: <b id="ds_tongSo" class="text-primary">0</b> kỳ
+              thủ</span
+            >
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+              Đóng
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="script.js"></script>
+  </body>
+</html>

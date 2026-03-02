@@ -1,6 +1,6 @@
 // --- CẤU HÌNH API ---
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbxperqhvig5g3Qt-HuOuTADswy-GoZSFYzOWA5DvClyE5vDIQtM6cr8OUuXImVnDbUAdg/exec";
+  "https://script.google.com/macros/s/AKfycbw5OVhG9_Ehj7_kiyKGsr24ug7hQ3C7_zkbX_dgDT49v5ZvQqZCx8XP8QQ40FFhMTrGeA/exec";
 // ============================================================
 // ============================================================
 // 2. BIẾN TOÀN CỤC & KHỞI TẠO
@@ -8,14 +8,12 @@ const API_URL =
 var QUYEN_HAN = "";
 var chart1 = null;
 var chart2 = null;
-var duLieuTimKiem = []; // Lưu toàn bộ kết quả tìm kiếm
-var modalSuaObj = null; // Biến quản lý Hộp thoại Sửa
+var duLieuTimKiem = [];
+var modalSuaObj = null;
 
-// Biến cho Phân trang (Xem tiếp)
-var pageSize = 20; // Số dòng mỗi lần hiện
-var currentIndex = 0; // Vị trí hiện tại
+var pageSize = 20;
+var currentIndex = 0;
 
-// Đăng ký Plugin hiển thị số liệu trên biểu đồ
 if (typeof Chart !== "undefined" && ChartDataLabels) {
   Chart.register(ChartDataLabels);
 }
@@ -24,18 +22,21 @@ if (typeof Chart !== "undefined" && ChartDataLabels) {
 // 3. HÀM GỌI API (TRUNG TÂM KẾT NỐI)
 // ============================================================
 async function callAPI(action, params = {}) {
-  // Hiện màn hình chờ Loading
   var loadingEl = document.getElementById("loadingOverlay");
   if (loadingEl) loadingEl.classList.add("active");
 
-  // Tạo URL gửi yêu cầu (Luôn dùng GET để tránh lỗi CORS trên Localhost)
   let url = API_URL + "?action=" + action;
 
-  // Nếu là hành động lưu/sửa/nhập liệu: Đóng gói dữ liệu thành chuỗi JSON
-  if (["save", "update"].includes(action)) {
+  // ĐÃ FIX LỖI Ở ĐÂY: Thêm 'saveGiaiDau' vào danh sách cần đóng gói JSON
+  // Nhớ có chữ 'saveKyThu'
+  // Nhớ thêm chữ 'deleteKyThu' vào danh sách này
+  if (
+    ["save", "update", "saveGiaiDau", "saveKyThu", "deleteKyThu"].includes(
+      action,
+    )
+  ) {
     url += "&data=" + encodeURIComponent(JSON.stringify(params));
   } else {
-    // Các hành động xem/tìm kiếm: Nối tham số bình thường
     const searchParams = new URLSearchParams(params);
     url += "&" + searchParams.toString();
   }
@@ -44,7 +45,6 @@ async function callAPI(action, params = {}) {
     const response = await fetch(url);
     const json = await response.json();
 
-    // Ẩn loading
     if (loadingEl) loadingEl.classList.remove("active");
     return json;
   } catch (error) {
@@ -56,6 +56,25 @@ async function callAPI(action, params = {}) {
       "error",
     );
     return null;
+  }
+}
+
+// ============================================================
+// ĐIỀU HƯỚNG SẢNH CHÍNH (TRANG CHỦ CHUNG)
+// ============================================================
+function veTrangChuCLB() {
+  document.getElementById("login-container").style.display = "none";
+  document.getElementById("app-container").style.display = "none";
+  document.getElementById("tour-container").style.display = "none";
+  document.getElementById("home-container").style.display = "block";
+}
+
+function moQuanLyQuy() {
+  document.getElementById("home-container").style.display = "none";
+  if (QUYEN_HAN !== "") {
+    document.getElementById("app-container").style.display = "block";
+  } else {
+    document.getElementById("login-container").style.display = "block";
   }
 }
 
@@ -76,14 +95,12 @@ async function xuLyDangNhap(event) {
       "",
     );
 
-    // Chuyển màn hình
     document.getElementById("login-container").style.display = "none";
     document.getElementById("app-container").style.display = "block";
 
     phanQuyenGiaoDien();
     khoiTaoApp();
 
-    // Thông báo chào mừng
     const Toast = Swal.mixin({
       toast: true,
       position: "top-end",
@@ -106,13 +123,18 @@ async function xuLyDangNhap(event) {
 function dangXuat() {
   Swal.fire({
     title: "Đăng xuất?",
-    text: "Bạn muốn thoát phiên làm việc?",
+    text: "Bạn muốn thoát khỏi hệ thống?",
     icon: "question",
     showCancelButton: true,
     confirmButtonText: "Đồng ý",
     cancelButtonText: "Không",
   }).then((result) => {
-    if (result.isConfirmed) location.reload();
+    if (result.isConfirmed) {
+      QUYEN_HAN = "";
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+      veTrangChuCLB();
+    }
   });
 }
 
@@ -160,7 +182,6 @@ async function taiDuLieuBaoCao() {
   veBieuDoTron(data.tongThu, data.tongChi);
   veBieuDoNguonThu(data.chiTietNguonThu);
 
-  // Top 10
   var listHTML = "",
     top10 = data.top10,
     hienThiRank = 1;
@@ -183,7 +204,6 @@ async function taiDuLieuBaoCao() {
     });
   document.getElementById("list-top10").innerHTML = listHTML;
 
-  // Hiện vật
   var hienVatHTML = "";
   var listHienVat = data.listHienVat;
   var divHienVat = document.getElementById("list-hienvat");
@@ -205,7 +225,7 @@ async function taiDuLieuBaoCao() {
 }
 
 // ============================================================
-// 6. LOGIC VẼ BIỂU ĐỒ (CHART.JS)
+// 6. LOGIC VẼ BIỂU ĐỒ
 // ============================================================
 function veBieuDoTron(thu, chi) {
   var ctx = document.getElementById("bieuDoTron").getContext("2d");
@@ -282,7 +302,7 @@ function veBieuDoNguonThu(data) {
 }
 
 // ============================================================
-// 7. XỬ LÝ FORM NHẬP LIỆU
+// 7. XỬ LÝ FORM NHẬP LIỆU (QUỸ)
 // ============================================================
 function chuyenManHinh(mh) {
   ["dashboard", "form", "search"].forEach(
@@ -318,7 +338,7 @@ async function handleFormSubmit(event) {
 }
 
 // ============================================================
-// 8. TÌM KIẾM - PHÂN TRANG - SỬA - XÓA
+// 8. TÌM KIẾM - SỬA - XÓA (QUỸ)
 // ============================================================
 async function thucHienTimKiem() {
   var tu = document.getElementById("searchTuNgay").value;
@@ -330,24 +350,19 @@ async function thucHienTimKiem() {
   var divTongHop = document.getElementById("ketQuaTongHop");
   var btnMore = document.getElementById("btnXemTiepContainer");
 
-  // Reset giao diện
   divKetQua.innerHTML =
     '<div class="text-center mt-3 spinner-border text-primary"></div>';
   divTongHop.innerHTML = "";
   if (btnMore) btnMore.style.display = "none";
   document.getElementById("btnIn").disabled = true;
 
-  // 1. Gọi API lấy TOÀN BỘ dữ liệu
   var data = await callAPI("search", {
     tu: tu,
     den: den,
     loai: loai,
     ten: ten,
   });
-
-  // Lưu vào biến toàn cục để dùng cho phân trang và In ấn
   duLieuTimKiem = data;
-
   document.getElementById("btnIn").disabled = !data || data.length === 0;
 
   if (!data || data.length == 0) {
@@ -356,7 +371,6 @@ async function thucHienTimKiem() {
     return;
   }
 
-  // 2. TÍNH TỔNG SỐ LIỆU (Trên toàn bộ dữ liệu tìm được)
   var tongTien = 0,
     soPhieu = data.length,
     soHienVat = 0,
@@ -376,7 +390,6 @@ async function thucHienTimKiem() {
   });
   divTongHop.innerHTML = `<div class="card card-box bg-primary bg-opacity-10 border-0 p-3 mb-3"><div class="row text-center"><div class="col-4 border-end border-primary"><small class="text-primary fw-bold text-uppercase">Số phiếu</small><div class="h5 fw-bold text-dark mb-0">${soPhieu}</div></div><div class="col-4 border-end border-primary"><small class="text-primary fw-bold text-uppercase">Hiện vật</small><div class="h5 fw-bold text-dark mb-0">${soHienVat}</div></div><div class="col-4"><small class="text-primary fw-bold text-uppercase">Tổng tiền</small><div class="h5 fw-bold text-danger mb-0">${fmt.format(tongTien)}</div></div></div>${soHienVat > 0 ? `<div class="mt-2 text-center small text-muted fst-italic border-top border-primary pt-2">🎁 Các hiện vật: ${chiTietHienVat.join(", ")}...</div>` : ""}</div>`;
 
-  // 3. VẼ KHUNG BẢNG
   divKetQua.innerHTML = `
         <div class="card card-box p-0 overflow-hidden">
             <table class="table mb-0 table-hover">
@@ -387,45 +400,33 @@ async function thucHienTimKiem() {
             </table>
         </div>`;
 
-  // 4. BẮT ĐẦU HIỂN THỊ
-  currentIndex = 0; // Reset
-  xemThemKetQua(); // Gọi hàm vẽ dòng
+  currentIndex = 0;
+  xemThemKetQua();
 }
 
-// Hàm vẽ thêm dòng (Phân trang)
 function xemThemKetQua() {
   var tableBody = document.getElementById("tableBody");
   var btnMore = document.getElementById("btnXemTiepContainer");
-
-  // Cắt dữ liệu
   var nextBatch = duLieuTimKiem.slice(currentIndex, currentIndex + pageSize);
   var htmlRows = "";
 
   nextBatch.forEach((item) => {
-    // Nút Sửa/Xóa (Chỉ Admin/Thủ quỹ)
     var actionButtons = '<i class="fas fa-lock text-muted"></i>';
     if (QUYEN_HAN === "admin" || QUYEN_HAN === "thuquy") {
       var itemStr = JSON.stringify(item).replace(/"/g, "&quot;");
-      actionButtons = `
-                <button class="btn btn-sm text-primary p-0 me-3" title="Sửa" onclick="moModalSua(${itemStr})"><i class="fas fa-edit"></i></button>
-                <button class="btn btn-sm text-danger p-0" title="Xóa" onclick="xoaItem('${item.id}')"><i class="fas fa-trash"></i></button>
-            `;
+      actionButtons = `<button class="btn btn-sm text-primary p-0 me-3" title="Sửa" onclick="moModalSua(${itemStr})"><i class="fas fa-edit"></i></button><button class="btn btn-sm text-danger p-0" title="Xóa" onclick="xoaItem('${item.id}')"><i class="fas fa-trash"></i></button>`;
     }
-
     var hienThiTien =
       item.hangMuc === "Tài trợ hiện vật"
         ? '<span class="badge bg-info text-dark">Hiện vật</span>'
         : new Intl.NumberFormat("vi-VN").format(item.tien);
     var classMau = item.loai === "Thu" ? "text-success" : "text-danger";
-
     htmlRows += `<tr><td class="ps-3 small text-muted">${new Date(item.ngay).toLocaleDateString("vi-VN")}</td><td><div class="fw-bold small">${item.hangMuc}</div><div class="text-muted fst-italic" style="font-size:11px">${item.nguoi}</div>${item.hangMuc === "Tài trợ hiện vật" ? `<div class="text-success small"><i class="fas fa-gift me-1"></i>${item.ghiChu}</div>` : ""}</td><td class="text-end fw-bold small ${classMau}">${hienThiTien}</td><td class="text-center">${actionButtons}</td></tr>`;
   });
 
   tableBody.insertAdjacentHTML("beforeend", htmlRows);
-
   currentIndex += nextBatch.length;
 
-  // Ẩn hiện nút Xem tiếp
   if (btnMore) {
     if (currentIndex < duLieuTimKiem.length) {
       btnMore.style.display = "block";
@@ -437,7 +438,6 @@ function xemThemKetQua() {
   }
 }
 
-// --- HÀM MỞ HỘP THOẠI SỬA ---
 function moModalSua(item) {
   document.getElementById("idEdit").value = item.id;
   document.getElementById("loaiGiaoDichEdit").value = item.loai;
@@ -446,20 +446,19 @@ function moModalSua(item) {
   document.getElementById("nguoiLienQuanEdit").value = item.nguoi;
   document.getElementById("ghiChuEdit").value = item.ghiChu;
 
-  // Format ngày YYYY-MM-DD
   var d = new Date(item.ngay);
-  var day = ("0" + d.getDate()).slice(-2);
-  var month = ("0" + (d.getMonth() + 1)).slice(-2);
-  var dateStr = d.getFullYear() + "-" + month + "-" + day;
+  var dateStr =
+    d.getFullYear() +
+    "-" +
+    ("0" + (d.getMonth() + 1)).slice(-2) +
+    "-" +
+    ("0" + d.getDate()).slice(-2);
   document.getElementById("ngayThangEdit").value = dateStr;
 
-  // Mở Modal
-  var modalEl = document.getElementById("modalSua");
-  modalSuaObj = new bootstrap.Modal(modalEl);
+  modalSuaObj = new bootstrap.Modal(document.getElementById("modalSua"));
   modalSuaObj.show();
 }
 
-// --- HÀM LƯU SỬA ---
 async function luuSua() {
   var data = {
     idEdit: document.getElementById("idEdit").value,
@@ -475,7 +474,7 @@ async function luuSua() {
   if (res && res.success) {
     Swal.fire("Đã cập nhật", res.message, "success");
     if (modalSuaObj) modalSuaObj.hide();
-    thucHienTimKiem(); // Load lại
+    thucHienTimKiem();
   } else {
     Swal.fire("Lỗi", res ? res.message : "Có lỗi xảy ra", "error");
   }
@@ -528,14 +527,10 @@ function inBaoCao() {
 }
 
 // ============================================================
-// ============================================================
-// 9. EVENT LISTENER & ĐỒNG HỒ (Đã cập nhật)
+// 9. EVENT LISTENER & ĐỒNG HỒ
 // ============================================================
 document.addEventListener("DOMContentLoaded", function () {
-  // 1. Kích hoạt Đồng hồ
   startClock();
-
-  // 2. Lắng nghe sự kiện chọn hạng mục (Logic cũ)
   var selectHangMuc = document.getElementById("hangMuc");
   if (selectHangMuc) {
     selectHangMuc.addEventListener("change", function () {
@@ -562,7 +557,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// --- HÀM CHẠY ĐỒNG HỒ ---
 function startClock() {
   function update() {
     var now = new Date();
@@ -575,7 +569,6 @@ function startClock() {
       "Thứ Sáu",
       "Thứ Bảy",
     ];
-
     var thu = days[now.getDay()];
     var ngay = String(now.getDate()).padStart(2, "0");
     var thang = String(now.getMonth() + 1).padStart(2, "0");
@@ -584,13 +577,294 @@ function startClock() {
     var phut = String(now.getMinutes()).padStart(2, "0");
     var giay = String(now.getSeconds()).padStart(2, "0");
 
-    // Định dạng: Thứ Hai, 09/02/2026 - 08:30:15
     var str = `${thu}, ${ngay}/${thang}/${nam} - ${gio}:${phut}:${giay}`;
-
     var el = document.getElementById("live-clock");
     if (el) el.innerText = str;
   }
+  update();
+  setInterval(update, 1000);
+}
 
-  update(); // Chạy ngay lập tức không cần chờ 1s
-  setInterval(update, 1000); // Lặp lại mỗi giây
+// ============================================================
+// 10. QUẢN LÝ GIẢI ĐẤU (THÊM/SỬA/XÓA/HIỂN THỊ)
+// ============================================================
+var modalGiaiDauObj = null;
+
+async function moGiaiDau() {
+  document.getElementById("home-container").style.display = "none";
+  document.getElementById("tour-container").style.display = "block";
+
+  if (QUYEN_HAN === "admin") {
+    document.getElementById("btn-admin-tour").style.display = "block";
+    document.getElementById("col-admin-action").style.display = "table-cell";
+  } else {
+    document.getElementById("btn-admin-tour").style.display = "none";
+    document.getElementById("col-admin-action").style.display = "none";
+  }
+
+  taiDuLieuGiaiDau();
+}
+
+async function taiDuLieuGiaiDau() {
+  document.getElementById("danhSachGiaiDau").innerHTML =
+    '<tr><td colspan="5" class="text-center py-4"><div class="spinner-border text-warning"></div></td></tr>';
+
+  var data = await callAPI("getGiaiDau");
+
+  if (!data || data.length === 0) {
+    document.getElementById("danhSachGiaiDau").innerHTML =
+      '<tr><td colspan="5" class="text-center py-4 text-muted">Chưa có thông tin giải đấu nào.</td></tr>';
+    return;
+  }
+
+  var html = "";
+  data.forEach((item) => {
+    var adminAction = "";
+    if (QUYEN_HAN === "admin") {
+      var itemStr = JSON.stringify(item).replace(/"/g, "&quot;");
+      adminAction = `
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-primary p-1 me-2" title="Sửa" onclick="moModalSuaGiaiDau(${itemStr})"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-outline-danger p-1" title="Xóa" onclick="xoaGiaiDau('${item.ma}')"><i class="fas fa-trash"></i></button>
+                </td>`;
+    }
+
+    var hienThiThoiGian = item.thoiGian;
+    if (
+      hienThiThoiGian &&
+      String(hienThiThoiGian).includes("T") &&
+      String(hienThiThoiGian).includes("Z")
+    ) {
+      var d = new Date(hienThiThoiGian);
+      if (!isNaN(d.getTime())) {
+        hienThiThoiGian = `${("0" + d.getDate()).slice(-2)}/${("0" + (d.getMonth() + 1)).slice(-2)}/${d.getFullYear()}`;
+      }
+    }
+
+    // Thoát dấu nháy cho an toàn
+    var safeTen = item.ten.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+    // Nút Đăng ký và Danh sách (Ai cũng thấy)
+    var publicAction = `
+            <td class="text-center">
+                <button class="btn btn-sm btn-success rounded-pill fw-bold mb-1" onclick="moModalDangKy('${item.ma}', '${safeTen}')"><i class="fas fa-edit me-1"></i>Đăng ký</button>
+                <br>
+                <button class="btn btn-sm btn-light rounded-pill border shadow-sm text-primary" style="font-size:11px" onclick="xemDanhSachKyThu('${item.ma}', '${safeTen}')"><i class="fas fa-list me-1"></i>Danh sách</button>
+            </td>
+        `;
+
+    html += `
+        <tr>
+            <td class="ps-3"><div class="fw-bold text-dark" style="font-size:1.1rem">${item.ten}</div><div class="small text-muted">Mã: ${item.ma}</div></td>
+            <td class="text-center"><span class="badge bg-light text-dark border"><i class="fas fa-sitemap me-1 text-muted"></i>${item.donVi}</span></td>
+            <td class="text-center fw-bold text-primary">${hienThiThoiGian}</td>
+            ${publicAction}
+            ${adminAction}
+        </tr>`;
+  });
+
+  document.getElementById("danhSachGiaiDau").innerHTML = html;
+}
+
+function moModalThemGiaiDau() {
+  document.getElementById("formGiaiDau").reset();
+  document.getElementById("isEditGiaiDau").value = "false";
+  document.getElementById("maGiaiDau").readOnly = false;
+  document.getElementById("modalGiaiDauTitle").innerHTML =
+    '<i class="fas fa-plus-circle me-2"></i>Thêm Giải Đấu Mới';
+
+  modalGiaiDauObj = new bootstrap.Modal(
+    document.getElementById("modalGiaiDau"),
+  );
+  modalGiaiDauObj.show();
+}
+
+function moModalSuaGiaiDau(item) {
+  document.getElementById("isEditGiaiDau").value = "true";
+  document.getElementById("maGiaiDau").value = item.ma;
+  document.getElementById("maGiaiDau").readOnly = true;
+  document.getElementById("tenGiaiDau").value = item.ten;
+  document.getElementById("donViToChuc").value = item.donVi;
+  document.getElementById("thoiGianGiaiDau").value = item.thoiGian;
+  document.getElementById("modalGiaiDauTitle").innerHTML =
+    '<i class="fas fa-edit me-2"></i>Cập nhật Giải Đấu';
+
+  modalGiaiDauObj = new bootstrap.Modal(
+    document.getElementById("modalGiaiDau"),
+  );
+  modalGiaiDauObj.show();
+}
+
+async function luuGiaiDau() {
+  var ten = document.getElementById("tenGiaiDau").value;
+  if (!ten) {
+    alert("Vui lòng nhập tên giải đấu!");
+    return;
+  }
+
+  var data = {
+    isEdit: document.getElementById("isEditGiaiDau").value === "true",
+    ma: document.getElementById("maGiaiDau").value,
+    ten: ten,
+    donVi: document.getElementById("donViToChuc").value,
+    thoiGian: document.getElementById("thoiGianGiaiDau").value,
+  };
+
+  var res = await callAPI("saveGiaiDau", data);
+  if (res && res.success) {
+    Swal.fire("Thành công", res.message, "success");
+    if (modalGiaiDauObj) modalGiaiDauObj.hide();
+    taiDuLieuGiaiDau();
+  }
+}
+
+async function xoaGiaiDau(maGiaiDau) {
+  if (confirm("Bạn chắc chắn muốn xóa giải đấu này?")) {
+    var res = await callAPI("deleteGiaiDau", { id: maGiaiDau });
+    if (res.success) {
+      Swal.fire("Đã xóa", res.message, "success");
+      taiDuLieuGiaiDau();
+    }
+  }
+}
+// ============================================================
+// 11. KỲ THỦ ĐĂNG KÝ VÀ XEM DANH SÁCH + HỦY ĐĂNG KÝ
+// ============================================================
+var modalDangKyObj = null;
+var modalDanhSachObj = null;
+
+function moModalDangKy(maGiai, tenGiai) {
+  document.getElementById("formDangKy").reset();
+  document.getElementById("dk_maGiai").value = maGiai;
+  document.getElementById("dk_tenGiai").value = tenGiai;
+
+  var modalEl = document.getElementById("modalDangKy");
+  modalDangKyObj = bootstrap.Modal.getOrCreateInstance(modalEl);
+  modalDangKyObj.show();
+}
+
+async function xacNhanDangKy(event) {
+  event.preventDefault();
+
+  var btn = document.getElementById("btnSubmitDangKy");
+  var textCu = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...';
+  btn.disabled = true;
+
+  var data = {
+    maGiai: document.getElementById("dk_maGiai").value,
+    tenGiai: document.getElementById("dk_tenGiai").value,
+    tenKyThu: document.getElementById("dk_tenKyThu").value,
+    clb: document.getElementById("dk_clb").value,
+  };
+
+  var res = await callAPI("saveKyThu", data);
+
+  btn.innerHTML = textCu;
+  btn.disabled = false;
+
+  if (res && res.success) {
+    Swal.fire(
+      "Đăng ký thành công!",
+      "Tên của bạn đã được ghi nhận vào hệ thống.",
+      "success",
+    );
+    if (modalDangKyObj) modalDangKyObj.hide();
+  } else {
+    Swal.fire("Lỗi", "Có lỗi xảy ra, vui lòng thử lại", "error");
+  }
+}
+
+// --- HÀM 1: CHỈ CÓ TÁC DỤNG MỞ HỘP THOẠI VÀ GỌI DỮ LIỆU ---
+async function xemDanhSachKyThu(maGiai, tenGiai) {
+  document.getElementById("ds_tenGiai").innerText = tenGiai;
+  document.getElementById("bangDanhSachKyThu").innerHTML =
+    '<tr><td colspan="4" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>';
+  document.getElementById("ds_tongSo").innerText = "0";
+
+  var colXoa = document.getElementById("col-admin-xoa-kythu");
+  if (colXoa)
+    colXoa.style.display = QUYEN_HAN === "admin" ? "table-cell" : "none";
+
+  // Dùng getOrCreateInstance để CHỐNG LỖI MỜ MÀN HÌNH (Không sinh ra 2 lớp màng)
+  var modalEl = document.getElementById("modalDanhSachKyThu");
+  modalDanhSachObj = bootstrap.Modal.getOrCreateInstance(modalEl);
+  modalDanhSachObj.show();
+
+  // Gọi dữ liệu và vẽ
+  var data = await callAPI("getDanhSachKyThu", { maGiai: maGiai });
+  veBangDanhSach(data, maGiai);
+}
+
+// --- HÀM 2: CHỈ LÀM NHIỆM VỤ VẼ BẢNG (Tách riêng để tái sử dụng) ---
+function veBangDanhSach(data, maGiai) {
+  if (!data || data.length === 0) {
+    document.getElementById("bangDanhSachKyThu").innerHTML =
+      '<tr><td colspan="4" class="text-center py-4 text-muted fst-italic">Chưa có kỳ thủ nào đăng ký.</td></tr>';
+    document.getElementById("ds_tongSo").innerText = "0";
+    return;
+  }
+
+  var html = "";
+  data.forEach((kt, index) => {
+    var safeTen = kt.ten.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+    var adminAction = "";
+    if (QUYEN_HAN === "admin") {
+      adminAction = `<td class="text-center"><button class="btn btn-sm text-danger p-0" onclick="huyDangKyKyThu('${maGiai}', '${safeTen}')" title="Hủy đăng ký"><i class="fas fa-user-minus"></i></button></td>`;
+    }
+
+    html += `
+        <tr>
+            <td class="text-center fw-bold text-muted">${index + 1}</td>
+            <td class="fw-bold text-dark ps-3">${kt.ten}</td>
+            <td class="text-center"><span class="badge bg-light text-secondary border">${kt.clb || "Tự do"}</span></td>
+            ${adminAction}
+        </tr>`;
+  });
+
+  document.getElementById("bangDanhSachKyThu").innerHTML = html;
+  document.getElementById("ds_tongSo").innerText = data.length;
+}
+
+// --- HÀM XÓA KỲ THỦ DÀNH CHO ADMIN ---
+function huyDangKyKyThu(maGiai, tenKyThu) {
+  Swal.fire({
+    title: "Hủy đăng ký?",
+    text: `Loại kỳ thủ "${tenKyThu}" khỏi giải đấu này?`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Đồng ý",
+    cancelButtonText: "Không",
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      // Hiện chữ Đang xóa ngay trong bảng
+      document.getElementById("bangDanhSachKyThu").innerHTML =
+        '<tr><td colspan="4" class="text-center py-4"><div class="spinner-border text-danger"></div><div class="small mt-2 text-muted">Đang xóa...</div></td></tr>';
+
+      var res = await callAPI("deleteKyThu", {
+        maGiai: maGiai,
+        tenKyThu: tenKyThu,
+      });
+
+      if (res && res.success) {
+        // XÓA XONG THÌ CHỈ TẢI LẠI DỮ LIỆU RỒI ĐỔ VÀO BẢNG (Không gọi lại lệnh mở Hộp thoại nữa)
+        var newData = await callAPI("getDanhSachKyThu", { maGiai: maGiai });
+        veBangDanhSach(newData, maGiai);
+
+        const Toast = Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+        });
+        Toast.fire({ icon: "success", title: "Đã hủy đăng ký" });
+      } else {
+        Swal.fire("Lỗi", res ? res.message : "Có lỗi xảy ra", "error");
+        // Nếu lỗi cũng phải load lại bảng cho chuẩn
+        var newData = await callAPI("getDanhSachKyThu", { maGiai: maGiai });
+        veBangDanhSach(newData, maGiai);
+      }
+    }
+  });
 }
