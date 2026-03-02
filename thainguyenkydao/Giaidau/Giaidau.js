@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 async function taiDuLieuGiaiDau() {
   document.getElementById("danhSachGiaiDau").innerHTML =
-    '<tr><td colspan="5" class="text-center py-4"><div class="spinner-border text-warning"></div></td></tr>';
+    '<tr><td colspan="4" class="text-center py-4 text-muted fst-italic">Đang tải dữ liệu...</td></tr>';
   var data = await callAPI("getGiaiDau");
   if (!data || data.length === 0) {
     document.getElementById("danhSachGiaiDau").innerHTML =
@@ -52,7 +52,7 @@ async function taiDuLieuGiaiDau() {
         if (isExpired) {
           hienThiHan = `<div class="small mt-1 text-danger fw-bold" style="font-size: 11px;"><i class="fas fa-times-circle me-1"></i>Đã hết hạn ĐK</div>`;
         } else {
-          hienThiHan = `<div class="small mt-1 text-success" style="font-size: 11px;"><i class="fas fa-clock me-1"></i>Hạn: ${strHan}</div>`;
+          hienThiHan = `<div class="small mt-1 text-success" style="font-size: 11px;"><i class="fas fa-clock me-1"></i>Hạn đăng ký: ${strHan}</div>`;
         }
       }
     }
