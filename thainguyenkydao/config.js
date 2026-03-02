@@ -47,14 +47,25 @@ async function callAPI(action, params = {}) {
   }
 
   try {
-    const response = await fetch(url);
+    // Thêm thuộc tính redirect: 'follow' để chống lỗi chặn chuyển hướng trên tên miền thật
+    const response = await fetch(url, {
+      method: "GET",
+      redirect: "follow",
+    });
+
     const json = await response.json();
     if (loadingEl) loadingEl.classList.remove("active");
     return json;
   } catch (error) {
     if (loadingEl) loadingEl.classList.remove("active");
     console.error("Lỗi API:", error);
-    Swal.fire("Lỗi kết nối", "Không thể kết nối đến Server Google!", "error");
+
+    // Thêm log để dễ bắt bệnh trên tên miền thật
+    console.log("Đường dẫn API đang gọi:", url);
+
+    alert(
+      "Lỗi kết nối đến Server Google. Hãy ấn F12 -> tab Console để xem chi tiết!",
+    );
     return null;
   }
 }
