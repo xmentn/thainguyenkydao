@@ -240,17 +240,39 @@ function veBangDanhSach(data, maGiai) {
     document.getElementById("ds_tongSo").innerText = "0";
     return;
   }
+
+  // 1. Kiểm tra xem người dùng có phải Admin không
+  var isAdmin = getQuyenHan() === "admin";
+
+  // 2. Hiện hoặc Ẩn cột tiêu đề "Quản lý" dựa vào quyền
+  var colXoa = document.getElementById("col-admin-xoa-kythu");
+  if (colXoa) {
+    if (isAdmin) {
+      colXoa.style.display = "table-cell"; // Mở khóa ẩn
+      colXoa.innerText = "Quản lý";
+      colXoa.style.width = "80px";
+    } else {
+      colXoa.style.display = "none"; // Giấu đi nếu là hội viên
+    }
+  }
+
+  // 3. Đổ dữ liệu kỳ thủ ra bảng
   var html = "";
   data.forEach((kt, index) => {
-    var safeTen = kt.ten.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+    var safeTen = kt.ten
+      ? kt.ten.replace(/'/g, "\\'").replace(/"/g, "&quot;")
+      : "";
     var safeClb = (kt.clb || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
     var adminAction = "";
-    if (QUYEN_HAN === "admin") {
+    // Chỉ vẽ ra 2 nút Sửa/Hủy nếu là Admin
+    if (isAdmin) {
       adminAction = `<td class="text-center">
                 <button class="btn btn-sm text-primary p-0 me-3" onclick="moModalSuaKyThu('${kt.id}', '${maGiai}', '${safeTen}', '${safeClb}')" title="Sửa thông tin"><i class="fas fa-edit"></i></button>
                 <button class="btn btn-sm text-danger p-0" onclick="huyDangKyKyThu('${maGiai}', '${safeTen}')" title="Hủy đăng ký"><i class="fas fa-user-minus"></i></button>
             </td>`;
     }
+
     html += `
         <tr>
             <td class="text-center fw-bold text-muted">${index + 1}</td>
@@ -259,15 +281,9 @@ function veBangDanhSach(data, maGiai) {
             ${adminAction}
         </tr>`;
   });
+
   document.getElementById("bangDanhSachKyThu").innerHTML = html;
   document.getElementById("ds_tongSo").innerText = data.length;
-
-  // Đổi chữ "Hủy" thành "Quản lý" và chỉnh lại độ rộng cột cho đẹp
-  var colXoa = document.getElementById("col-admin-xoa-kythu");
-  if (colXoa) {
-    colXoa.innerText = "Quản lý";
-    colXoa.style.width = "80px";
-  }
 }
 // --- HÀM XÓA KỲ THỦ DÀNH CHO ADMIN ---
 function huyDangKyKyThu(maGiai, tenKyThu) {

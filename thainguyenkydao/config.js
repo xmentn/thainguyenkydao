@@ -105,7 +105,54 @@ async function callAPI(action, params = {}) {
         .eq("ma", params.id);
       result = { success: !error, message: "Đã xóa giải đấu" };
     }
-
+    // --- 3. XỬ LÝ KỲ THỦ ĐĂNG KÝ ---
+    else if (action === "saveKyThu") {
+      const { error } = await supabaseClient.from("KyThu").insert([
+        {
+          maGiai: params.maGiai,
+          tenGiai: params.tenGiai,
+          tenKyThu: params.tenKyThu,
+          clb: params.clb,
+        },
+      ]);
+      result = {
+        success: !error,
+        message: error ? error.message : "Đăng ký thành công!",
+      };
+    } else if (action === "getDanhSachKyThu") {
+      const { data, error } = await supabaseClient
+        .from("KyThu")
+        .select("*")
+        .eq("maGiai", params.maGiai)
+        .order("ngayDangKy", { ascending: true });
+      // Đã bổ sung item.id để lấy ID gốc của kỳ thủ
+      result = data
+        ? data.map((item) => ({
+            id: item.id,
+            ten: item.tenKyThu,
+            clb: item.clb,
+          }))
+        : [];
+    } else if (action === "updateKyThu") {
+      const { error } = await supabaseClient
+        .from("KyThu")
+        .update({
+          tenKyThu: params.tenKyThu,
+          clb: params.clb,
+        })
+        .eq("id", params.id);
+      result = {
+        success: !error,
+        message: error ? error.message : "Đã cập nhật thông tin!",
+      };
+    } else if (action === "deleteKyThu") {
+      const { error } = await supabaseClient
+        .from("KyThu")
+        .delete()
+        .eq("maGiai", params.maGiai)
+        .eq("tenKyThu", params.tenKyThu);
+      result = { success: !error, message: "Đã hủy đăng ký" };
+    }
     // --- 4. XỬ LÝ QUỸ CLB (THU/CHI) ---
     else if (action === "save") {
       const { error } = await supabaseClient.from("GiaoDich").insert([
