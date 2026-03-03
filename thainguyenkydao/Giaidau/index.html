@@ -294,6 +294,50 @@
           </div>
         </div>
       </div>
+      <div class="modal fade" id="modalSuaKyThu" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title fw-bold">
+                <i class="fas fa-user-edit me-2"></i>Sửa thông tin Kỳ thủ
+              </h5>
+              <button
+                type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <form id="formSuaKyThu" onsubmit="luuSuaKyThu(event)">
+                <input type="hidden" id="edit_kt_id" />
+                <input type="hidden" id="edit_kt_maGiai" />
+                <div class="mb-3">
+                  <label class="small fw-bold text-muted">Tên Kỳ thủ (*)</label>
+                  <input
+                    type="text"
+                    class="form-control border-primary fw-bold"
+                    id="edit_kt_ten"
+                    required
+                  />
+                </div>
+                <div class="mb-4">
+                  <label class="small fw-bold text-muted"
+                    >Thuộc CLB / Đơn vị</label
+                  >
+                  <input type="text" class="form-control" id="edit_kt_clb" />
+                </div>
+                <button
+                  type="submit"
+                  class="btn btn-primary w-100 py-2 fw-bold shadow-sm"
+                  id="btnSubmitSuaKyThu"
+                >
+                  LƯU THAY ĐỔI
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

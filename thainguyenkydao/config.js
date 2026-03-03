@@ -106,38 +106,6 @@ async function callAPI(action, params = {}) {
       result = { success: !error, message: "Đã xóa giải đấu" };
     }
 
-    // --- 3. XỬ LÝ KỲ THỦ ĐĂNG KÝ ---
-    else if (action === "saveKyThu") {
-      const { error } = await supabaseClient.from("KyThu").insert([
-        {
-          maGiai: params.maGiai,
-          tenGiai: params.tenGiai,
-          tenKyThu: params.tenKyThu,
-          clb: params.clb,
-        },
-      ]);
-      result = {
-        success: !error,
-        message: error ? error.message : "Đăng ký thành công!",
-      };
-    } else if (action === "getDanhSachKyThu") {
-      const { data, error } = await supabaseClient
-        .from("KyThu")
-        .select("*")
-        .eq("maGiai", params.maGiai)
-        .order("ngayDangKy", { ascending: true });
-      result = data
-        ? data.map((item) => ({ ten: item.tenKyThu, clb: item.clb }))
-        : [];
-    } else if (action === "deleteKyThu") {
-      const { error } = await supabaseClient
-        .from("KyThu")
-        .delete()
-        .eq("maGiai", params.maGiai)
-        .eq("tenKyThu", params.tenKyThu);
-      result = { success: !error, message: "Đã hủy đăng ký" };
-    }
-
     // --- 4. XỬ LÝ QUỸ CLB (THU/CHI) ---
     else if (action === "save") {
       const { error } = await supabaseClient.from("GiaoDich").insert([

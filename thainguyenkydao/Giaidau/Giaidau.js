@@ -240,16 +240,17 @@ function veBangDanhSach(data, maGiai) {
     document.getElementById("ds_tongSo").innerText = "0";
     return;
   }
-
   var html = "";
   data.forEach((kt, index) => {
     var safeTen = kt.ten.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-
+    var safeClb = (kt.clb || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
     var adminAction = "";
     if (QUYEN_HAN === "admin") {
-      adminAction = `<td class="text-center"><button class="btn btn-sm text-danger p-0" onclick="huyDangKyKyThu('${maGiai}', '${safeTen}')" title="Hủy đăng ký"><i class="fas fa-user-minus"></i></button></td>`;
+      adminAction = `<td class="text-center">
+                <button class="btn btn-sm text-primary p-0 me-3" onclick="moModalSuaKyThu('${kt.id}', '${maGiai}', '${safeTen}', '${safeClb}')" title="Sửa thông tin"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm text-danger p-0" onclick="huyDangKyKyThu('${maGiai}', '${safeTen}')" title="Hủy đăng ký"><i class="fas fa-user-minus"></i></button>
+            </td>`;
     }
-
     html += `
         <tr>
             <td class="text-center fw-bold text-muted">${index + 1}</td>
@@ -258,11 +259,16 @@ function veBangDanhSach(data, maGiai) {
             ${adminAction}
         </tr>`;
   });
-
   document.getElementById("bangDanhSachKyThu").innerHTML = html;
   document.getElementById("ds_tongSo").innerText = data.length;
-}
 
+  // Đổi chữ "Hủy" thành "Quản lý" và chỉnh lại độ rộng cột cho đẹp
+  var colXoa = document.getElementById("col-admin-xoa-kythu");
+  if (colXoa) {
+    colXoa.innerText = "Quản lý";
+    colXoa.style.width = "80px";
+  }
+}
 // --- HÀM XÓA KỲ THỦ DÀNH CHO ADMIN ---
 function huyDangKyKyThu(maGiai, tenKyThu) {
   Swal.fire({
@@ -305,7 +311,58 @@ function huyDangKyKyThu(maGiai, tenKyThu) {
   });
 }
 
-// >>> SAU ĐÓ, ANH COPY TOÀN BỘ CÁC HÀM:
-// taiDuLieuGiaiDau(), moModalThemGiaiDau(), moModalSuaGiaiDau(), luuGiaiDau(), xoaGiaiDau()
-// moModalDangKy(), xacNhanDangKy(), xemDanhSachKyThu(), veBangDanhSach(), huyDangKyKyThu()
-// TỪ FILE script.js CŨ CỦA ANH DÁN TIẾP VÀO DƯỚI NÀY. KHÔNG CẦN CHỈNH SỬA GÌ THÊM!
+// --- XỬ LÝ SỬA KỲ THỦ ---
+var modalSuaKyThuObj = null;
+
+function moModalSuaKyThu(id, maGiai, tenKyThu, clb) {
+  // Đổ dữ liệu cũ vào Form
+  document.getElementById("edit_kt_id").value = id;
+  document.getElementById("edit_kt_maGiai").value = maGiai;
+  document.getElementById("edit_kt_ten").value = tenKyThu;
+  document.getElementById("edit_kt_clb").value = clb;
+
+  // Mở Modal
+  modalSuaKyThuObj = bootstrap.Modal.getOrCreateInstance(
+    document.getElementById("modalSuaKyThu"),
+  );
+  modalSuaKyThuObj.show();
+}
+
+async function luuSuaKyThu(event) {
+  event.preventDefault();
+  var btn = document.getElementById("btnSubmitSuaKyThu");
+  var textCu = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang lưu...';
+  btn.disabled = true;
+
+  var maGiai = document.getElementById("edit_kt_maGiai").value;
+  var data = {
+    id: document.getElementById("edit_kt_id").value,
+    tenKyThu: document.getElementById("edit_kt_ten").value,
+    clb: document.getElementById("edit_kt_clb").value,
+  };
+
+  var res = await callAPI("updateKyThu", data);
+  btn.innerHTML = textCu;
+  btn.disabled = false;
+
+  if (res && res.success) {
+    const Toast = Swal.mixin({
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 3000,
+    });
+    Toast.fire({ icon: "success", title: "Đã cập nhật!" });
+
+    if (modalSuaKyThuObj) modalSuaKyThuObj.hide();
+
+    // Tự động tải lại bảng danh sách để thấy tên mới ngay lập tức
+    document.getElementById("bangDanhSachKyThu").innerHTML =
+      '<tr><td colspan="4" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>';
+    var newData = await callAPI("getDanhSachKyThu", { maGiai: maGiai });
+    veBangDanhSach(newData, maGiai);
+  } else {
+    Swal.fire("Lỗi", "Có lỗi xảy ra, vui lòng thử lại", "error");
+  }
+}
