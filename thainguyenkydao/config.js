@@ -214,7 +214,7 @@ async function callAPI(action, params = {}) {
             tongThu += tien;
             tonQuy += tien;
             if (item.hangMuc === "Đóng quỹ hội viên") dongQuy += tien;
-            else if (item.hangMuc === "Tài trợ / Ủng hộ") {
+            else if (item.hangMuc === "Tài trợ/Ủng hộ") {
               taiTro += tien;
               sponsorMap[item.nguoiLienQuan] =
                 (sponsorMap[item.nguoiLienQuan] || 0) + tien;
