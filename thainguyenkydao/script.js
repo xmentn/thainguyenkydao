@@ -31,9 +31,14 @@ async function callAPI(action, params = {}) {
   // Nhớ có chữ 'saveKyThu'
   // Nhớ thêm chữ 'deleteKyThu' vào danh sách này
   if (
-    ["save", "update", "saveGiaiDau", "saveKyThu", "deleteKyThu"].includes(
-      action,
-    )
+    [
+      "save",
+      "update",
+      "saveGiaiDau",
+      "saveKyThu",
+      "deleteKyThu",
+      "updateNhieuKetQua",
+    ].includes(action)
   ) {
     url += "&data=" + encodeURIComponent(JSON.stringify(params));
   } else {
