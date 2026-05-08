@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   taiDuLieuGiaiDau();
 });
+
 async function taiDuLieuGiaiDau() {
   document.getElementById("danhSachGiaiDau").innerHTML =
     '<tr><td colspan="4" class="text-center py-4 text-muted fst-italic">Đang tải dữ liệu...</td></tr>';
@@ -33,14 +34,11 @@ async function taiDuLieuGiaiDau() {
     var hienThiThoiGian = item.thoiGian;
     if (hienThiThoiGian) {
       var dTG = new Date(hienThiThoiGian);
-      // Kiểm tra xem dữ liệu có phải là ngày tháng hợp lệ không
       if (!isNaN(dTG.getTime())) {
-        // Ép về định dạng dd/mm/yyyy
         hienThiThoiGian = `${("0" + dTG.getDate()).slice(-2)}/${("0" + (dTG.getMonth() + 1)).slice(-2)}/${dTG.getFullYear()}`;
       }
     }
 
-    // TÍNH TOÁN HIỂN THỊ HẠN CHÓT
     var hienThiHan = "";
     var isExpired = false;
     if (item.hanDangKy) {
@@ -59,7 +57,6 @@ async function taiDuLieuGiaiDau() {
 
     var safeTen = item.ten.replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
-    // Đổi màu nút Đăng ký thành Xám nếu đã hết hạn
     var btnDangKy = isExpired
       ? `<button class="btn btn-sm btn-secondary rounded-pill fw-bold mb-1" onclick="Swal.fire('Đã đóng', 'Giải đấu này đã hết hạn đăng ký!', 'warning')"><i class="fas fa-lock me-1"></i>Đăng ký</button>`
       : `<button class="btn btn-sm btn-success rounded-pill fw-bold mb-1" onclick="moModalDangKy('${item.ma}', '${safeTen}')"><i class="fas fa-edit me-1"></i>Đăng ký</button>`;
@@ -77,11 +74,12 @@ async function taiDuLieuGiaiDau() {
   });
   document.getElementById("danhSachGiaiDau").innerHTML = html;
 }
+
 function moModalThemGiaiDau() {
   document.getElementById("formGiaiDau").reset();
   document.getElementById("isEditGiaiDau").value = "false";
   document.getElementById("maGiaiDau").readOnly = false;
-  document.getElementById("hanDangKy").value = ""; // Xóa trắng hạn đăng ký
+  document.getElementById("hanDangKy").value = "";
   document.getElementById("modalGiaiDauTitle").innerHTML =
     '<i class="fas fa-plus-circle me-2"></i>Thêm Giải Đấu Mới';
   modalGiaiDauObj = bootstrap.Modal.getOrCreateInstance(
@@ -91,16 +89,12 @@ function moModalThemGiaiDau() {
 }
 
 function moModalSuaGiaiDau(item) {
-  // 1. Chuyển form sang chế độ Sửa (Edit)
   document.getElementById("isEditGiaiDau").value = "true";
-
-  // 2. Điền các thông tin cơ bản
   document.getElementById("maGiaiDau").value = item.ma;
-  document.getElementById("maGiaiDau").readOnly = true; // Khóa không cho sửa Mã
+  document.getElementById("maGiaiDau").readOnly = true;
   document.getElementById("tenGiaiDau").value = item.ten;
   document.getElementById("donViToChuc").value = item.donVi;
 
-  // 3. Xử lý "Thời gian tổ chức" (Định dạng YYYY-MM-DD cho input type="date")
   var tgStr = "";
   if (item.thoiGian) {
     var dTG = new Date(item.thoiGian);
@@ -113,7 +107,6 @@ function moModalSuaGiaiDau(item) {
   }
   document.getElementById("thoiGianGiaiDau").value = tgStr;
 
-  // 4. Xử lý "Hạn chót đăng ký" (Định dạng YYYY-MM-DDTHH:mm cho input datetime-local)
   var hanStr = "";
   if (item.hanDangKy) {
     var dHan = new Date(item.hanDangKy);
@@ -128,7 +121,6 @@ function moModalSuaGiaiDau(item) {
   }
   document.getElementById("hanDangKy").value = hanStr;
 
-  // 5. Cập nhật tiêu đề Hộp thoại và Hiển thị
   document.getElementById("modalGiaiDauTitle").innerHTML =
     '<i class="fas fa-edit me-2"></i>Cập nhật Giải Đấu';
   modalGiaiDauObj = bootstrap.Modal.getOrCreateInstance(
@@ -136,6 +128,7 @@ function moModalSuaGiaiDau(item) {
   );
   modalGiaiDauObj.show();
 }
+
 async function luuGiaiDau() {
   var ten = document.getElementById("tenGiaiDau").value;
   if (!ten) {
@@ -149,7 +142,7 @@ async function luuGiaiDau() {
     ten: ten,
     donVi: document.getElementById("donViToChuc").value,
     thoiGian: document.getElementById("thoiGianGiaiDau").value,
-    hanDangKy: document.getElementById("hanDangKy").value, // Gửi kèm thời hạn
+    hanDangKy: document.getElementById("hanDangKy").value,
   };
 
   var res = await callAPI("saveGiaiDau", data);
@@ -159,6 +152,7 @@ async function luuGiaiDau() {
     taiDuLieuGiaiDau();
   }
 }
+
 async function xoaGiaiDau(maGiaiDau) {
   if (confirm("Bạn chắc chắn muốn xóa giải đấu này?")) {
     var res = await callAPI("deleteGiaiDau", { id: maGiaiDau });
@@ -168,6 +162,7 @@ async function xoaGiaiDau(maGiaiDau) {
     }
   }
 }
+
 var modalDangKyObj = null;
 var modalDanhSachObj = null;
 
@@ -212,62 +207,60 @@ async function xacNhanDangKy(event) {
     Swal.fire("Lỗi", "Có lỗi xảy ra, vui lòng thử lại", "error");
   }
 }
+
 async function xemDanhSachKyThu(maGiai, tenGiai) {
   document.getElementById("ds_tenGiai").innerText = tenGiai;
   document.getElementById("bangDanhSachKyThu").innerHTML =
     '<tr><td colspan="4" class="text-center py-4 text-muted fst-italic">Đang tải dữ liệu...</td></tr>';
+
+  // Reset số lượng
   document.getElementById("ds_tongSo").innerText = "0";
+  if (document.getElementById("ds_tongSo_In")) document.getElementById("ds_tongSo_In").innerText = "0";
 
   var colXoa = document.getElementById("col-admin-xoa-kythu");
   if (colXoa)
     colXoa.style.display = QUYEN_HAN === "admin" ? "table-cell" : "none";
 
-  // Dùng getOrCreateInstance để CHỐNG LỖI MỜ MÀN HÌNH (Không sinh ra 2 lớp màng)
   var modalEl = document.getElementById("modalDanhSachKyThu");
   modalDanhSachObj = bootstrap.Modal.getOrCreateInstance(modalEl);
   modalDanhSachObj.show();
 
-  // Gọi dữ liệu và vẽ
   var data = await callAPI("getDanhSachKyThu", { maGiai: maGiai });
   veBangDanhSach(data, maGiai);
 }
 
-// --- HÀM 2: CHỈ LÀM NHIỆM VỤ VẼ BẢNG (Tách riêng để tái sử dụng) ---
+// --- HÀM 2: CHỈ LÀM NHIỆM VỤ VẼ BẢNG ---
 function veBangDanhSach(data, maGiai) {
   if (!data || data.length === 0) {
     document.getElementById("bangDanhSachKyThu").innerHTML =
       '<tr><td colspan="4" class="text-center py-4 text-muted fst-italic">Chưa có kỳ thủ nào đăng ký.</td></tr>';
     document.getElementById("ds_tongSo").innerText = "0";
+    if (document.getElementById("ds_tongSo_In")) document.getElementById("ds_tongSo_In").innerText = "0";
     return;
   }
 
-  // 1. Kiểm tra xem người dùng có phải Admin không
   var isAdmin = getQuyenHan() === "admin";
-
-  // 2. Hiện hoặc Ẩn cột tiêu đề "Quản lý" dựa vào quyền
   var colXoa = document.getElementById("col-admin-xoa-kythu");
+
   if (colXoa) {
     if (isAdmin) {
-      colXoa.style.display = "table-cell"; // Mở khóa ẩn
+      colXoa.style.display = "table-cell";
       colXoa.innerText = "Quản lý";
       colXoa.style.width = "80px";
     } else {
-      colXoa.style.display = "none"; // Giấu đi nếu là hội viên
+      colXoa.style.display = "none";
     }
   }
 
-  // 3. Đổ dữ liệu kỳ thủ ra bảng
   var html = "";
   data.forEach((kt, index) => {
-    var safeTen = kt.ten
-      ? kt.ten.replace(/'/g, "\\'").replace(/"/g, "&quot;")
-      : "";
+    var safeTen = kt.ten ? kt.ten.replace(/'/g, "\\'").replace(/"/g, "&quot;") : "";
     var safeClb = (kt.clb || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
     var adminAction = "";
-    // Chỉ vẽ ra 2 nút Sửa/Hủy nếu là Admin
     if (isAdmin) {
-      adminAction = `<td class="text-center">
+      // Đã thêm class admin-action-col để nhận diện lúc ẩn in PDF
+      adminAction = `<td class="text-center admin-action-col">
                 <button class="btn btn-sm text-primary p-0 me-3" onclick="moModalSuaKyThu('${kt.id}', '${maGiai}', '${safeTen}', '${safeClb}')" title="Sửa thông tin"><i class="fas fa-edit"></i></button>
                 <button class="btn btn-sm text-danger p-0" onclick="huyDangKyKyThu('${maGiai}', '${safeTen}')" title="Hủy đăng ký"><i class="fas fa-user-minus"></i></button>
             </td>`;
@@ -284,7 +277,10 @@ function veBangDanhSach(data, maGiai) {
 
   document.getElementById("bangDanhSachKyThu").innerHTML = html;
   document.getElementById("ds_tongSo").innerText = data.length;
+  // Gắn luôn số liệu vào vùng dành riêng cho in PDF
+  if (document.getElementById("ds_tongSo_In")) document.getElementById("ds_tongSo_In").innerText = data.length;
 }
+
 // --- HÀM XÓA KỲ THỦ DÀNH CHO ADMIN ---
 function huyDangKyKyThu(maGiai, tenKyThu) {
   Swal.fire({
@@ -296,7 +292,6 @@ function huyDangKyKyThu(maGiai, tenKyThu) {
     cancelButtonText: "Không",
   }).then(async (result) => {
     if (result.isConfirmed) {
-      // Hiện chữ Đang xóa ngay trong bảng
       document.getElementById("bangDanhSachKyThu").innerHTML =
         '<tr><td colspan="4" class="text-center py-4"><div class="spinner-border text-danger"></div><div class="small mt-2 text-muted">Đang xóa...</div></td></tr>';
 
@@ -306,7 +301,6 @@ function huyDangKyKyThu(maGiai, tenKyThu) {
       });
 
       if (res && res.success) {
-        // XÓA XONG THÌ CHỈ TẢI LẠI DỮ LIỆU RỒI ĐỔ VÀO BẢNG (Không gọi lại lệnh mở Hộp thoại nữa)
         var newData = await callAPI("getDanhSachKyThu", { maGiai: maGiai });
         veBangDanhSach(newData, maGiai);
 
@@ -319,7 +313,6 @@ function huyDangKyKyThu(maGiai, tenKyThu) {
         Toast.fire({ icon: "success", title: "Đã hủy đăng ký" });
       } else {
         Swal.fire("Lỗi", res ? res.message : "Có lỗi xảy ra", "error");
-        // Nếu lỗi cũng phải load lại bảng cho chuẩn
         var newData = await callAPI("getDanhSachKyThu", { maGiai: maGiai });
         veBangDanhSach(newData, maGiai);
       }
@@ -331,13 +324,11 @@ function huyDangKyKyThu(maGiai, tenKyThu) {
 var modalSuaKyThuObj = null;
 
 function moModalSuaKyThu(id, maGiai, tenKyThu, clb) {
-  // Đổ dữ liệu cũ vào Form
   document.getElementById("edit_kt_id").value = id;
   document.getElementById("edit_kt_maGiai").value = maGiai;
   document.getElementById("edit_kt_ten").value = tenKyThu;
   document.getElementById("edit_kt_clb").value = clb;
 
-  // Mở Modal
   modalSuaKyThuObj = bootstrap.Modal.getOrCreateInstance(
     document.getElementById("modalSuaKyThu"),
   );
@@ -373,7 +364,6 @@ async function luuSuaKyThu(event) {
 
     if (modalSuaKyThuObj) modalSuaKyThuObj.hide();
 
-    // Tự động tải lại bảng danh sách để thấy tên mới ngay lập tức
     document.getElementById("bangDanhSachKyThu").innerHTML =
       '<tr><td colspan="4" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>';
     var newData = await callAPI("getDanhSachKyThu", { maGiai: maGiai });
@@ -381,4 +371,61 @@ async function luuSuaKyThu(event) {
   } else {
     Swal.fire("Lỗi", "Có lỗi xảy ra, vui lòng thử lại", "error");
   }
+}
+
+// ==========================================
+// HÀM XUẤT PDF DANH SÁCH KỲ THỦ (THÊM MỚI)
+// ==========================================
+function xuatDanhSachPDF() {
+  var vungCuon = document.getElementById('vungCuonDanhSach');
+  var vungIn = document.getElementById('vungInDanhSachPDF');
+  var tenGiai = document.getElementById('ds_tenGiai').innerText;
+
+  if (!vungCuon || !vungIn) {
+    Swal.fire("Lỗi", "Không tìm thấy vùng dữ liệu", "error");
+    return;
+  }
+
+  // 1. Mở rộng toàn bộ chiều cao để lấy hết danh sách
+  var originalMaxHeight = vungCuon.style.maxHeight;
+  var originalOverflow = vungCuon.style.overflowY;
+  vungCuon.style.maxHeight = 'none';
+  vungCuon.style.overflowY = 'visible';
+
+  // 2. Ẩn cột quản lý trước khi xuất
+  var colXoa = document.getElementById("col-admin-xoa-kythu");
+  var originalColDisplay = colXoa ? colXoa.style.display : 'none';
+  if (colXoa) colXoa.style.display = 'none';
+
+  var actionCols = vungIn.querySelectorAll('.admin-action-col');
+  actionCols.forEach(col => col.style.display = 'none');
+
+  // 3. Cấu hình in PDF
+  var tenFile = 'Danh_Sach_Ky_Thu_' + tenGiai.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf';
+  var opt = {
+    margin: [10, 10, 10, 10],
+    filename: tenFile,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  Swal.fire({
+    title: 'Đang khởi tạo PDF...',
+    allowOutsideClick: false,
+    didOpen: () => Swal.showLoading()
+  });
+
+  // 4. Gọi html2pdf
+  html2pdf().set(opt).from(vungIn).save().then(() => {
+    // Khôi phục lại giao diện ban đầu
+    vungCuon.style.maxHeight = originalMaxHeight;
+    vungCuon.style.overflowY = originalOverflow;
+    if (colXoa) colXoa.style.display = originalColDisplay;
+    actionCols.forEach(col => col.style.display = '');
+
+    Swal.close();
+    const Toast = Swal.mixin({ toast: true, position: "top-end", showConfirmButton: false, timer: 3000 });
+    Toast.fire({ icon: "success", title: "Đã tải xuống file PDF!" });
+  });
 }
