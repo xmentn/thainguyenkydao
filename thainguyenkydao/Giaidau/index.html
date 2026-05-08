@@ -21,6 +21,10 @@
       /* Dòng kẻ đen đậm */
       padding: 8px !important;
     }
+
+    #vungInDanhSachPDF thead th {
+      border-bottom: 2px solid #000 !important;
+    }
   </style>
 </head>
 
@@ -177,7 +181,7 @@
 
           <div id="vungCuonDanhSach" style="max-height: 400px; overflow-y: auto">
             <table class="table table-bordered table-hover mb-0 align-middle">
-              <thead class="table-light sticky-top text-center">
+              <thead class="table-light sticky-top text-center" id="theadDanhSach">
                 <tr>
                   <th style="width: 50px">STT</th>
                   <th>Tên Kỳ thủ</th>

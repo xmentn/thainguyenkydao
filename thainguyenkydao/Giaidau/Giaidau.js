@@ -380,6 +380,7 @@ function xuatDanhSachPDF() {
   var vungCuon = document.getElementById('vungCuonDanhSach');
   var vungIn = document.getElementById('vungInDanhSachPDF');
   var tenGiai = document.getElementById('ds_tenGiai').innerText;
+  var thead = document.getElementById('theadDanhSach');
 
   if (!vungCuon || !vungIn) {
     Swal.fire("Lỗi", "Không tìm thấy vùng dữ liệu", "error");
@@ -391,7 +392,7 @@ function xuatDanhSachPDF() {
   var originalOverflow = vungCuon.style.overflowY;
   vungCuon.style.maxHeight = 'none';
   vungCuon.style.overflowY = 'visible';
-
+  if (thead) thead.classList.remove('sticky-top');
   // 2. Ẩn cột quản lý trước khi xuất
   var colXoa = document.getElementById("col-admin-xoa-kythu");
   var originalColDisplay = colXoa ? colXoa.style.display : 'none';
@@ -421,6 +422,7 @@ function xuatDanhSachPDF() {
     // Khôi phục lại giao diện ban đầu
     vungCuon.style.maxHeight = originalMaxHeight;
     vungCuon.style.overflowY = originalOverflow;
+    if (thead) thead.classList.add('sticky-top');
     if (colXoa) colXoa.style.display = originalColDisplay;
     actionCols.forEach(col => col.style.display = '');
 
