@@ -226,7 +226,8 @@ async function luuGiaiDau() {
 }
 
 // --- XÓA GIẢI ĐẤU (ĐÃ NÂNG CẤP GIAO DIỆN SWEETALERT2) ---
-// --- XÓA GIẢI ĐẤU (XÓA KỲ THỦ TRƯỚC RỒI MỚI XÓA GIẢI) ---
+// --- XÓA GIẢI ĐẤU (PHIÊN BẢN HIỂN THỊ LỖI GỐC ĐỂ CHUẨN ĐOÁN) ---
+// --- XÓA GIẢI ĐẤU (ĐÃ SỬA CHUẨN TÊN CỘT maGiai) ---
 async function xoaGiaiDau(ma) {
   Swal.fire({
     title: "Xóa giải đấu này?",
@@ -241,36 +242,31 @@ async function xoaGiaiDau(ma) {
   }).then(async (result) => {
     if (result.isConfirmed) {
       Swal.fire({
-        title: "Đang dọn dẹp dữ liệu...",
+        title: "Đang xử lý...",
         didOpen: () => Swal.showLoading(),
         allowOutsideClick: false,
       });
 
-      try {
-        // BƯỚC 1: Xóa tất cả kỳ thủ thuộc giải đấu này bên bảng KyThu trước
-        await supabaseClient.from("KyThu").delete().eq("maGiai", ma);
+      // BƯỚC 1: Xóa các kỳ thủ thuộc giải đấu này (quét cả maGiai và magiai cho chắc)
+      await supabaseClient.from("KyThu").delete().eq("maGiai", ma);
+      await supabaseClient.from("KyThu").delete().eq("magiai", ma);
 
-        // BƯỚC 2: Sau khi dọn xong kỳ thủ, tiến hành xóa Giải Đấu
-        const { error } = await supabaseClient
-          .from("GiaiDau")
-          .delete()
-          .eq("ma", ma);
+      // BƯỚC 2: Xóa giải đấu (ĐÃ SỬA THÀNH maGiai CHO KHỚP DATABASE)
+      const { error } = await supabaseClient
+        .from("GiaiDau")
+        .delete()
+        .eq("maGiai", ma);
 
-        if (error) throw error;
-
+      if (error) {
+        console.error("Lỗi chi tiết từ Supabase:", error);
+        Swal.fire("Lỗi Database", error.message, "error");
+      } else {
         Swal.fire(
           "Đã xóa!",
-          "Giải đấu và danh sách kỳ thủ liên quan đã được xóa sạch.",
+          "Giải đấu và danh sách kỳ thủ liên quan đã được xóa.",
           "success",
         );
         taiDuLieuGiaiDau(); // Tải lại bảng
-      } catch (err) {
-        console.error("Lỗi khi xóa:", err);
-        Swal.fire(
-          "Lỗi",
-          "Không thể xóa! Anh hãy kiểm tra lại Policy (RLS) quyền Delete trên Supabase nhé.",
-          "error",
-        );
       }
     }
   });
