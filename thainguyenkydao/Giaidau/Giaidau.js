@@ -309,18 +309,22 @@ async function xemDanhSachKyThu(ma, ten) {
   bang.innerHTML =
     '<tr><td colspan="4" class="text-center py-4 text-muted fst-italic">Đang tải dữ liệu từ CSDL...</td></tr>';
 
-  if (document.getElementById("btnXuatExcel"))
-    document.getElementById("btnXuatExcel").style.display =
-      QUYEN_HAN === "admin" ? "inline-block" : "none";
-  if (document.getElementById("col-admin-xoa-kythu"))
+  // 1. CHO PHÉP TẤT CẢ MỌI NGƯỜI THẤY NÚT XUẤT EXCEL
+  if (document.getElementById("btnXuatExcel")) {
+    document.getElementById("btnXuatExcel").style.display = "inline-block";
+  }
+
+  // 2. NHƯNG VẪN PHẢI GIỮ BẢO MẬT: Chỉ admin mới thấy cột Sửa/Xóa kỳ thủ
+  if (document.getElementById("col-admin-xoa-kythu")) {
     document.getElementById("col-admin-xoa-kythu").style.display =
       QUYEN_HAN === "admin" ? "table-cell" : "none";
+  }
 
   bootstrap.Modal.getOrCreateInstance(
     document.getElementById("modalDanhSachKyThu"),
   ).show();
 
-  // Đọc danh sách từ Supabase, sắp xếp theo ID (ai đăng ký trước xếp trên)
+  // Đọc danh sách từ Supabase
   const { data, error } = await supabaseClient
     .from("KyThu")
     .select("*")
