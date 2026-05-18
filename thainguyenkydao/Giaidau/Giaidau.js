@@ -336,21 +336,24 @@ async function xemDanhSachKyThu(ma, ten) {
 }
 function veBangDanhSach(data, maGiai) {
   let bang = document.getElementById("bangDanhSachKyThu");
+  // Tìm thẻ chứa số lượng (hỗ trợ cả id mới và id cũ)
+  let elementTongSo =
+    document.getElementById("ds_tongSo") ||
+    document.getElementById("tongSoKyThu");
+
   if (!data || data.length === 0) {
     bang.innerHTML =
       '<tr><td colspan="4" class="text-center py-4 text-muted">Chưa có ai đăng ký.</td></tr>';
-    document.getElementById("ds_tongSo").innerText = "0";
+    if (elementTongSo) elementTongSo.innerText = "0";
     return;
   }
 
   let html = "";
   data.forEach((kt, i) => {
-    // Đọc chuẩn tên cột tenKyThu trên Supabase
     let tenKT = kt.tenKyThu || kt.ten || "Chưa có tên";
     let safeTen = tenKT.replace(/'/g, "\\'");
     let safeClb = (kt.clb || "Tự do").replace(/'/g, "\\'");
 
-    // Xóa theo id thay vì tên để tránh xóa nhầm người trùng tên
     let adminBtn =
       QUYEN_HAN === "admin"
         ? `<td class="text-center admin-action-col">
@@ -367,8 +370,14 @@ function veBangDanhSach(data, maGiai) {
     </tr>`;
   });
   bang.innerHTML = html;
-  document.getElementById("ds_tongSo").innerText = data.length;
+
+  // Điền tổng số kỳ thủ vào HTML cho cả 2 vị trí
+  if (document.getElementById("ds_tongSo"))
+    document.getElementById("ds_tongSo").innerText = data.length;
+  if (document.getElementById("ds_tongSo_2"))
+    document.getElementById("ds_tongSo_2").innerText = data.length;
 }
+
 // --- 5. KẾT QUẢ SUPABASE ---
 async function xemKetQua(ma, ten) {
   document.getElementById("view_kq_tenGiai").innerText = ten;
@@ -507,12 +516,26 @@ function locKyThuDanhSach() {
     .getElementById("timKiemKyThuDanhSach")
     .value.toLowerCase()
     .trim();
+  let count = 0;
+
   document.querySelectorAll("#bangDanhSachKyThu tr").forEach((r) => {
     let t = r.querySelectorAll("td")[1]?.textContent.toLowerCase() || "";
-    r.style.display = t.includes(val) ? "" : "none";
+    if (t.includes(val)) {
+      r.style.display = "";
+      count++; // Có chữ khớp thì tăng biến đếm
+    } else {
+      r.style.display = "none";
+    }
   });
-}
 
+  // --- PHẦN MỚI THAY THẾ: Cập nhật con số cho cả 2 vị trí ---
+  if (document.getElementById("ds_tongSo")) {
+    document.getElementById("ds_tongSo").innerText = count;
+  }
+  if (document.getElementById("ds_tongSo_2")) {
+    document.getElementById("ds_tongSo_2").innerText = count;
+  }
+}
 function locKyThuNhapKQ() {
   let val = document
     .getElementById("timKiemKyThuNhapKQ")
