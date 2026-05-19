@@ -100,37 +100,87 @@ body {
   animation: fadeIn 0.5s ease-in-out;
 }
 
+/* --- THIẾT KẾ THẺ CHIA ĐÔI CAO CẤP (TOP BANNER COLOR / BOTTOM WHITE) --- */
 .module-card {
-  border-radius: 20px;
-  border: none;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  overflow: hidden;
-  height: 100%;
+  background: #ffffff;
+  border-radius: 20px !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+  overflow: hidden; /* Bắt buộc để khối màu nửa trên không đè mất góc bo tròn */
+  box-shadow: 0 10px 25px rgba(13, 71, 161, 0.04) !important;
+  display: flex;
+  flex-direction: column;
 }
 
+/* Hiệu ứng nhấc thẻ lên khi di chuột vào */
 .module-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  transform: translateY(-6px);
+  box-shadow: 0 16px 35px rgba(13, 71, 161, 0.12) !important;
 }
 
-.module-icon-box {
-  height: 120px;
+/* Nửa khối trên: Chiếm trọn không gian màu nền và căn giữa biểu tượng */
+.card-top-split {
+  height: 95px; /* Chiều cao khối màu trên điện thoại */
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
-  color: white;
+  font-size: 28px;
+  color: #ffffff;
 }
 
+@media (min-width: 576px) {
+  .card-top-split {
+    height: 120px; /* Chiều cao khối màu trên máy tính */
+    font-size: 36px; /* Icon to rõ nét hơn */
+  }
+}
+
+.card-top-split i {
+  transition: transform 0.35s ease;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+}
+
+/* Hiệu ứng phóng to xoay nhẹ biểu tượng khi hover */
+.module-card:hover .card-top-split i {
+  transform: scale(1.15) rotate(5deg);
+}
+
+/* Nửa khối dưới: Nền trắng tinh khôi chứa thông tin chữ */
+.module-card .card-body {
+  flex: 1;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-title-custom {
+  font-size: 15px;
+  letter-spacing: 0.5px;
+}
+@media (min-width: 576px) {
+  .card-title-custom {
+    font-size: 18px;
+  }
+}
+
+/* --- HỆ THỐNG MÀU GRADIENT ĐỔ TRỌN BANNER TRÊN --- */
 .bg-giai-dau {
-  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-}
-.bg-quy-clb {
-  background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
 }
 
+.bg-quy-clb {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.bg-ky-thu {
+  background: linear-gradient(135deg, #ff9900 0%, #ff5500 100%);
+}
+
+.bg-ve-clb {
+  background: linear-gradient(135deg, #614385 0%, #516395 100%);
+}
 @keyframes fadeIn {
   from {
     opacity: 0;

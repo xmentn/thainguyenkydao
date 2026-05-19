@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Về Câu Lạc Bộ - Thái Nguyên Kỳ Đạo</title>
+    <link rel="icon" type="image/png" href="../images/Logo CLB.png" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      body {
+        background-color: #eef2f6;
+        font-family: "Segoe UI", sans-serif;
+      }
+      .header-banner {
+        background: linear-gradient(135deg, #614385 0%, #516395 100%);
+        color: white;
+        padding: 30px 15px;
+        border-radius: 0 0 25px 25px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+      .main-card {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.04);
+      }
+      .nav-pills .nav-link {
+        color: #516395;
+        font-weight: 600;
+        border-radius: 12px;
+        padding: 10px 20px;
+        transition: all 0.3s;
+      }
+      .nav-pills .nav-link.active {
+        background: linear-gradient(135deg, #614385 0%, #516395 100%);
+        color: white;
+      }
+      .bcn-card {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+        transition: transform 0.2s;
+      }
+      .bcn-card:hover {
+        transform: translateY(-3px);
+      }
+      .avatar-box {
+        width: 70px;
+        height: 70px;
+        background: #eef2f6;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #516395;
+        font-size: 28px;
+      }
+      .badge-status {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header-banner text-center position-relative">
+      <a
+        href="../index.html"
+        class="btn btn-sm btn-light position-absolute start-0 top-0 mt-3 ms-3 rounded-pill shadow-sm text-dark fw-bold"
+      >
+        <i class="fas fa-arrow-left me-1"></i> Trang chủ
+      </a>
+      <h2 class="fw-bold text-uppercase mb-1" style="letter-spacing: 0.5px">
+        Về Câu Lạc Bộ
+      </h2>
+      <p class="mb-0 opacity-75 small">
+        Thông tin cơ cấu, quy chế hoạt động và thành viên hội viên
+      </p>
+    </div>
+
+    <div class="container my-4" style="max-width: 950px">
+      <ul
+        class="nav nav-pills nav-fill gap-2 p-1 bg-white rounded-4 shadow-sm mb-4"
+        id="clbTab"
+        role="tablist"
+      >
+        <li class="nav-item">
+          <button
+            class="nav-link active"
+            id="quyche-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#quyche"
+            type="button"
+            role="tab"
+          >
+            <i class="fas fa-gavel me-2"></i>Quy chế
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            id="bcn-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#bcn"
+            type="button"
+            role="tab"
+          >
+            <i class="fas fa-sitemap me-2"></i>Ban chủ nhiệm
+          </button>
+        </li>
+        <li class="nav-item">
+          <button
+            class="nav-link"
+            id="hoivien-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#hoivien"
+            type="button"
+            role="tab"
+          >
+            <i class="fas fa-id-card me-2"></i>Hội viên
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="quyche" role="tabpanel">
+          <div class="card main-card p-4 bg-white text-dark">
+            <h4 class="fw-bold text-center mb-3 text-uppercase text-dark">
+              Quy chế hoạt động CLB
+            </h4>
+
+            <div
+              id="khoiAdminQuyChe"
+              class="mb-4 p-3 bg-light rounded-3 border border-warning"
+              style="display: none"
+            >
+              <h6 class="fw-bold text-warning mb-2">
+                <i class="fas fa-user-shield me-2"></i>Bảng điều khiển Admin:
+                Cập nhật file Quy chế
+              </h6>
+              <div class="input-group input-group-sm">
+                <input
+                  type="file"
+                  class="form-control"
+                  id="fileQuyChePdf"
+                  accept=".pdf"
+                />
+                <button
+                  class="btn btn-warning fw-bold"
+                  type="button"
+                  onclick="taiLenQuyChePdf()"
+                >
+                  <i class="fas fa-upload me-1"></i> Tải lên PDF
+                </button>
+              </div>
+              <div class="small text-muted mt-1">
+                * Hệ thống tự động ghi đè tệp cũ và hiển thị trực tuyến file
+                mới.
+              </div>
+            </div>
+
+            <div id="khungHienThiQuyChe" class="text-center py-4">
+              <div class="spinner-border text-secondary mb-2"></div>
+              <div class="text-muted fst-italic small">
+                Đang kết nối kho dữ liệu tệp tin...
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane fade" id="bcn" role="tabpanel">
+          <div class="row g-3">
+            <div class="col-md-12">
+              <div
+                class="card bcn-card p-3 bg-white d-flex flex-row align-items-center gap-3 border-start border-primary border-4"
+              >
+                <div class="avatar-box"><i class="fas fa-user-tie"></i></div>
+                <div>
+                  <h5 class="fw-bold mb-0 text-dark">Phạm Hồng Thái</h5>
+                  <span
+                    class="badge text-white mt-1"
+                    style="background-color: #614385"
+                    >Chủ nhiệm CLB</span
+                  >
+                  <p class="text-muted small mb-0 mt-1">
+                    Điều hành, định hướng chung hoạt động của Câu lạc bộ.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div
+                class="card bcn-card p-3 bg-white d-flex flex-row align-items-center gap-3 border-start border-info border-4"
+              >
+                <div class="avatar-box">
+                  <i class="fas fa-user-friends"></i>
+                </div>
+                <div>
+                  <h5 class="fw-bold mb-0 text-dark">Ban Chuyên Môn</h5>
+                  <span class="badge bg-info text-white mt-1"
+                    >Phó Chủ nhiệm</span
+                  >
+                  <p class="text-muted small mb-0 mt-1">
+                    Phụ trách công tác chuyên môn của Câu lạc bộ.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div
+                class="card bcn-card p-3 bg-white d-flex flex-row align-items-center gap-3 border-start border-success border-4"
+              >
+                <div class="avatar-box"><i class="fas fa-wallet"></i></div>
+                <div>
+                  <h5 class="fw-bold mb-0 text-dark">Ban Tài Chính</h5>
+                  <span class="badge bg-success text-white mt-1"
+                    >Thủ quỹ CLB</span
+                  >
+                  <p class="text-muted small mb-0 mt-1">
+                    Quản lý hệ thống thu chi quỹ hội, tài trợ và cập nhật bảng
+                    vàng trực tuyến.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane fade" id="hoivien" role="tabpanel">
+          <div class="card main-card p-3 bg-white">
+            <div
+              class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-3"
+            >
+              <div
+                class="position-relative flex-grow-1"
+                style="max-width: 400px"
+              >
+                <span
+                  class="position-absolute top-50 start-0 translate-middle-y ps-3 text-muted"
+                  ><i class="fas fa-search"></i
+                ></span>
+                <input
+                  type="text"
+                  id="timKiemHoiVien"
+                  class="form-control ps-5 rounded-pill"
+                  placeholder="Tìm kiếm hội viên..."
+                  onkeyup="locHoiVien()"
+                />
+              </div>
+
+              <div
+                class="d-flex align-items-center gap-3 justify-content-between"
+              >
+                <div class="small text-muted fw-bold">
+                  Tổng số:
+                  <span id="tongSoHoiVien" class="text-primary fs-5">0</span>
+                  hội viên
+                </div>
+                <button
+                  class="btn btn-primary rounded-pill fw-bold shadow-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#modalDangKyHoiVien"
+                >
+                  <i class="fas fa-user-plus me-1"></i> Đăng ký Hội viên
+                </button>
+              </div>
+            </div>
+
+            <div class="table-responsive rounded-3 border">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th class="text-center" style="width: 70px">STT</th>
+                    <th>Họ và tên</th>
+                    <th>Địa chỉ nơi ở</th>
+                    <th
+                      id="th_sdt"
+                      class="text-center"
+                      style="display: none; width: 150px"
+                    >
+                      Số điện thoại
+                    </th>
+                    <th class="text-center" style="width: 180px">Trạng thái</th>
+                    <th
+                      id="th_hanhDong"
+                      class="text-center"
+                      style="width: 120px; display: none"
+                    >
+                      Thao tác
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="bangHoiVien">
+                  <tr>
+                    <td
+                      colspan="6"
+                      class="text-center py-4 text-muted fst-italic"
+                    >
+                      Đang tải danh sách thành viên từ máy chủ...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="modal fade"
+      id="modalDangKyHoiVien"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+          <div class="modal-header bg-primary text-white rounded-top-4">
+            <h5 class="modal-title fw-bold">
+              <i class="fas fa-handshake me-2"></i>Đăng ký gia nhập CLB
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body p-4">
+            <form id="formDangKyHoiVien" onsubmit="xuLyDangKyHoiVien(event)">
+              <div class="mb-3">
+                <label class="form-label fw-bold text-dark"
+                  >Họ và tên <span class="text-danger">*</span></label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="dk_hoTen"
+                  required
+                  placeholder="Ví dụ: Nguyễn Văn A"
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold text-dark"
+                  >Số điện thoại liên hệ (số dùng Zalo)
+                  <span class="text-danger">*</span></label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="dk_soDienThoai"
+                  required
+                  placeholder="Nhập số điện thoại chính chủ"
+                />
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-bold text-dark"
+                  >Địa chỉ thường trú / Nơi ở
+                  <span class="text-danger">*</span></label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="dk_diaChi"
+                  required
+                  placeholder="Ví dụ: Xã Trại Cau, tỉnh Thái Nguyên"
+                />
+              </div>
+              <button
+                type="submit"
+                class="btn btn-primary w-100 fw-bold py-2 rounded-pill shadow"
+              >
+                Gửi đơn đăng ký gia nhập
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="../config.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
