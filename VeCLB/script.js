@@ -113,50 +113,58 @@ async function taiLenQuyChePdf() {
 // CHỨC NĂNG 2: TRA CỨU ĐĂNG KÝ VÀ PHÊ DUYỆT HỘI VIÊN (BẢNG DATABASE HoiVien)
 // ============================================================================
 
+// --- HÀM TẢI DANH SÁCH HỘI VIÊN (ĐÃ NÂNG CẤP NÚT BẤM ADMIN) ---
 async function taiDanhSachHoiVien() {
   const container = document.getElementById("bangHoiVien");
   const countLabel = document.getElementById("tongSoHoiVien");
   if (!container) return;
 
   try {
-    // Thực hiện truy vấn đọc bảng dữ liệu HoiVien mới
     const { data, error } = await supabaseClient
       .from("HoiVien")
       .select("*")
-      .order("status", { ascending: true }) // Đẩy hồ sơ 'Chưa duyệt' lên đầu cho ban quản trị xử lý trước
+      .order("status", { ascending: true })
       .order("created_at", { ascending: false });
 
     if (error) throw error;
 
     if (!data || data.length === 0) {
-      container.innerHTML = `<tr><td colspan="${QUYEN_HAN === "admin" ? 6 : 4}" class="text-center py-4 text-muted">Hệ thống chưa ghi nhận dữ liệu hội viên nào.</td></tr>`;
+      container.innerHTML = `<tr><td colspan="${QUYEN_HAN === 'admin' ? 6 : 4}" class="text-center py-4 text-muted">Hệ thống chưa ghi nhận dữ liệu hội viên nào.</td></tr>`;
       if (countLabel) countLabel.innerText = "0";
       return;
     }
 
     var html = "";
     data.forEach((hv, i) => {
-      let isApproved =
-        hv.status === "Đã duyệt" || hv.status === "Thành viên chính thức";
+      let isApproved = (hv.status === "Đã duyệt" || hv.status === "Thành viên chính thức");
 
-      // Định hình nhãn trạng thái trực quan bằng màu sắc tương ứng
       let statusBadge = isApproved
         ? `<span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2 py-1.5 rounded"><i class="fas fa-check-circle me-1"></i>Thành viên chính thức</span>`
         : `<span class="badge bg-warning-subtle text-warning border border-warning border-opacity-25 px-2 py-1.5 rounded"><i class="fas fa-clock me-1"></i>Chưa được duyệt</span>`;
 
-      // Cột số điện thoại: Hiện số nếu là admin, ẩn dòng trống nếu không có quyền
-      let sdtRow =
-        QUYEN_HAN === "admin"
-          ? `<td class="text-center text-secondary small fw-bold">${hv.soDienThoai || "-"}</td>`
-          : "";
+      let sdtRow = (QUYEN_HAN === "admin") ? `<td class="text-center text-secondary small fw-bold">${hv.soDienThoai || "-"}</td>` : "";
 
-      // Khởi tạo cột nút bấm Thao tác phê duyệt chỉ định cho tài khoản quản trị
+      // Xử lý dữ liệu text an toàn (tránh lỗi khi tên có chứa dấu nháy đơn)
+      let safeTen = (hv.hoTen || "").replace(/'/g, "\\'");
+      let safeSdt = (hv.soDienThoai || "").replace(/'/g, "\\'");
+      let safeDiaChi = (hv.diaChi || "").replace(/'/g, "\\'");
+      let safeStatus = (hv.status || "").replace(/'/g, "\\'");
+
+      // Bộ 3 nút bấm thao tác dành cho Admin
       let hanhDongRow = "";
       if (QUYEN_HAN === "admin") {
+        // Nút Duyệt (Chỉ hiện khi chưa duyệt)
         let btnDuyet = !isApproved
-          ? `<button class="btn btn-xs btn-success rounded-pill fw-bold px-2 py-1 small" style="font-size: 12px;" onclick="pheDuyetThanhVien('${hv.id}', '${hv.hoTen}')"><i class="fas fa-user-check me-1"></i>Duyệt</button>`
-          : `<span class="text-muted small"><i class="fas fa-lock me-1"></i>Đã khóa quyền</span>`;
-        hanhDongRow = `<td class="text-center">${btnDuyet}</td>`;
+          ? `<button class="btn btn-sm btn-success px-2 py-1 me-1 shadow-sm" title="Duyệt ngay" onclick="pheDuyetThanhVien('${hv.id}', '${safeTen}')"><i class="fas fa-check"></i></button>`
+          : `<button class="btn btn-sm btn-secondary px-2 py-1 me-1 opacity-25" disabled><i class="fas fa-check"></i></button>`;
+
+        // Nút Sửa
+        let btnSua = `<button class="btn btn-sm btn-primary px-2 py-1 me-1 shadow-sm" title="Sửa thông tin" onclick="moModalSuaHoiVien('${hv.id}', '${safeTen}', '${safeSdt}', '${safeDiaChi}', '${safeStatus}')"><i class="fas fa-edit"></i></button>`;
+
+        // Nút Xóa
+        let btnXoa = `<button class="btn btn-sm btn-danger px-2 py-1 shadow-sm" title="Xóa hội viên" onclick="xoaHoiVien('${hv.id}', '${safeTen}')"><i class="fas fa-trash-alt"></i></button>`;
+
+        hanhDongRow = `<td class="text-center text-nowrap">${btnDuyet}${btnSua}${btnXoa}</td>`;
       }
 
       html += `<tr>
@@ -171,10 +179,88 @@ async function taiDanhSachHoiVien() {
 
     container.innerHTML = html;
     if (countLabel) countLabel.innerText = data.length;
+
   } catch (err) {
     console.error("Lỗi kết nối CSDL bảng HoiVien:", err);
-    container.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">Không thể thiết lập kết nối đồng bộ dữ liệu với máy chủ.</td></tr>`;
+    container.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">Không thể thiết lập kết nối đồng bộ dữ liệu.</td></tr>`;
   }
+}
+
+// --- CÁC HÀM XỬ LÝ CHỈNH SỬA VÀ XÓA (ADMIN) ---
+
+// 1. Mở Modal và điền dữ liệu cũ vào Form Sửa
+function moModalSuaHoiVien(id, ten, sdt, diachi, status) {
+  document.getElementById("sua_id").value = id;
+  document.getElementById("sua_hoTen").value = ten;
+  document.getElementById("sua_soDienThoai").value = sdt;
+  document.getElementById("sua_diaChi").value = diachi;
+
+  // Tự động chọn đúng trạng thái hiện tại
+  let selectStatus = document.getElementById("sua_status");
+  if (status === "Đã duyệt" || status === "Thành viên chính thức") {
+    selectStatus.value = "Đã duyệt";
+  } else {
+    selectStatus.value = "Chưa duyệt";
+  }
+
+  bootstrap.Modal.getOrCreateInstance(document.getElementById("modalSuaHoiVien")).show();
+}
+
+// 2. Xử lý lưu cập nhật lên Supabase
+async function xuLySuaHoiVien(event) {
+  event.preventDefault();
+  const id = document.getElementById("sua_id").value;
+  const hoTen = document.getElementById("sua_hoTen").value.trim();
+  const soDienThoai = document.getElementById("sua_soDienThoai").value.trim();
+  const diaChi = document.getElementById("sua_diaChi").value.trim();
+  const status = document.getElementById("sua_status").value;
+
+  Swal.fire({ title: 'Đang lưu thay đổi...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+
+  try {
+    const { error } = await supabaseClient
+      .from("HoiVien")
+      .update({ hoTen: hoTen, soDienThoai: soDienThoai, diaChi: diaChi, status: status })
+      .eq("id", id);
+
+    if (error) throw error;
+
+    Swal.fire("Thành công!", "Đã cập nhật thông tin hội viên.", "success");
+    bootstrap.Modal.getInstance(document.getElementById("modalSuaHoiVien")).hide();
+    taiDanhSachHoiVien();
+  } catch (err) {
+    console.error(err);
+    Swal.fire("Lỗi cập nhật", "Có lỗi xảy ra, không thể lưu dữ liệu.", "error");
+  }
+}
+
+// 3. Xử lý lệnh Xóa hội viên
+async function xoaHoiVien(id, ten) {
+  Swal.fire({
+    title: "Xóa vĩnh viễn?",
+    text: `Bạn có chắc chắn muốn xóa hồ sơ của "${ten}" không? Thao tác này không thể hoàn tác!`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: "Đồng ý xóa",
+    cancelButtonText: "Hủy"
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      Swal.fire({ title: 'Đang xóa dữ liệu...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+
+      try {
+        const { error } = await supabaseClient.from("HoiVien").delete().eq("id", id);
+        if (error) throw error;
+
+        Swal.fire("Đã xóa!", `Hồ sơ của ${ten} đã được xóa sạch khỏi hệ thống.`, "success");
+        taiDanhSachHoiVien();
+      } catch (err) {
+        console.error(err);
+        Swal.fire("Lỗi xóa", "Không thể xóa. Hãy kiểm tra lại quyền DELETE trên Supabase.", "error");
+      }
+    }
+  });
 }
 
 async function xuLyDangKyHoiVien(event) {
