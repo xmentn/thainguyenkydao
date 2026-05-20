@@ -113,55 +113,83 @@ async function taiLenQuyChePdf() {
 // CHỨC NĂNG 2: TRA CỨU ĐĂNG KÝ VÀ PHÊ DUYỆT HỘI VIÊN (BẢNG DATABASE HoiVien)
 // ============================================================================
 
-// --- HÀM TẢI DANH SÁCH HỘI VIÊN (ĐÃ NÂNG CẤP NÚT BẤM ADMIN) ---
+// --- HÀM TẢI DANH SÁCH HỘI VIÊN (ĐÃ NÂNG CẤP SẮP XẾP A-Z CHUẨN TIẾNG VIỆT) ---
 async function taiDanhSachHoiVien() {
   const container = document.getElementById("bangHoiVien");
   const countLabel = document.getElementById("tongSoHoiVien");
   if (!container) return;
 
   try {
-    const { data, error } = await supabaseClient
-      .from("HoiVien")
-      .select("*")
-      .order("status", { ascending: true })
-      .order("created_at", { ascending: false });
+    // Tải toàn bộ dữ liệu từ bảng (chưa sắp xếp)
+    const { data, error } = await supabaseClient.from("HoiVien").select("*");
 
     if (error) throw error;
 
     if (!data || data.length === 0) {
-      container.innerHTML = `<tr><td colspan="${QUYEN_HAN === 'admin' ? 6 : 4}" class="text-center py-4 text-muted">Hệ thống chưa ghi nhận dữ liệu hội viên nào.</td></tr>`;
+      container.innerHTML = `<tr><td colspan="${QUYEN_HAN === "admin" ? 6 : 4}" class="text-center py-4 text-muted">Hệ thống chưa ghi nhận dữ liệu hội viên nào.</td></tr>`;
       if (countLabel) countLabel.innerText = "0";
       return;
     }
 
+    // --- THUẬT TOÁN TÁCH TÊN VÀ SẮP XẾP TIẾNG VIỆT ---
+
+    // Hàm phụ: Lấy từ cuối cùng trong chuỗi "Họ và Tên"
+    const layTenChinh = (hoTenFull) => {
+      if (!hoTenFull) return "";
+      let parts = hoTenFull.trim().split(" ");
+      return parts[parts.length - 1];
+    };
+
+    data.sort((a, b) => {
+      // 1. Ưu tiên nhóm: Xếp người "Chưa duyệt" (số 0) lên trước người "Đã duyệt" (số 1)
+      let uuTienA = a.status === "Chưa duyệt" ? 0 : 1;
+      let uuTienB = b.status === "Chưa duyệt" ? 0 : 1;
+
+      if (uuTienA !== uuTienB) {
+        return uuTienA - uuTienB;
+      }
+
+      // 2. Nếu cùng nhóm trạng thái, tiến hành so sánh theo Tên chính
+      let tenA = layTenChinh(a.hoTen);
+      let tenB = layTenChinh(b.hoTen);
+
+      let soSanhTen = tenA.localeCompare(tenB, "vi"); // 'vi' giúp nhận diện chuẩn bảng chữ cái VN
+      if (soSanhTen !== 0) return soSanhTen;
+
+      // 3. Nếu trùng cả Tên chính, tiến hành so sánh toàn bộ Họ và Tên
+      return (a.hoTen || "").localeCompare(b.hoTen || "", "vi");
+    });
+
+    // --- TIẾN HÀNH VẼ BẢNG GIAO DIỆN ---
     var html = "";
     data.forEach((hv, i) => {
-      let isApproved = (hv.status === "Đã duyệt" || hv.status === "Thành viên chính thức");
+      let isApproved =
+        hv.status === "Đã duyệt" || hv.status === "Thành viên chính thức";
 
       let statusBadge = isApproved
         ? `<span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2 py-1.5 rounded"><i class="fas fa-check-circle me-1"></i>Thành viên chính thức</span>`
         : `<span class="badge bg-warning-subtle text-warning border border-warning border-opacity-25 px-2 py-1.5 rounded"><i class="fas fa-clock me-1"></i>Chưa được duyệt</span>`;
 
-      let sdtRow = (QUYEN_HAN === "admin") ? `<td class="text-center text-secondary small fw-bold">${hv.soDienThoai || "-"}</td>` : "";
+      let sdtRow =
+        QUYEN_HAN === "admin"
+          ? `<td class="text-center text-secondary small fw-bold">${hv.soDienThoai || "-"}</td>`
+          : "";
 
-      // Xử lý dữ liệu text an toàn (tránh lỗi khi tên có chứa dấu nháy đơn)
+      // Xử lý an toàn chuỗi văn bản
       let safeTen = (hv.hoTen || "").replace(/'/g, "\\'");
       let safeSdt = (hv.soDienThoai || "").replace(/'/g, "\\'");
       let safeDiaChi = (hv.diaChi || "").replace(/'/g, "\\'");
       let safeStatus = (hv.status || "").replace(/'/g, "\\'");
 
-      // Bộ 3 nút bấm thao tác dành cho Admin
+      // Bộ 3 nút thao tác Admin
       let hanhDongRow = "";
       if (QUYEN_HAN === "admin") {
-        // Nút Duyệt (Chỉ hiện khi chưa duyệt)
         let btnDuyet = !isApproved
           ? `<button class="btn btn-sm btn-success px-2 py-1 me-1 shadow-sm" title="Duyệt ngay" onclick="pheDuyetThanhVien('${hv.id}', '${safeTen}')"><i class="fas fa-check"></i></button>`
           : `<button class="btn btn-sm btn-secondary px-2 py-1 me-1 opacity-25" disabled><i class="fas fa-check"></i></button>`;
 
-        // Nút Sửa
         let btnSua = `<button class="btn btn-sm btn-primary px-2 py-1 me-1 shadow-sm" title="Sửa thông tin" onclick="moModalSuaHoiVien('${hv.id}', '${safeTen}', '${safeSdt}', '${safeDiaChi}', '${safeStatus}')"><i class="fas fa-edit"></i></button>`;
 
-        // Nút Xóa
         let btnXoa = `<button class="btn btn-sm btn-danger px-2 py-1 shadow-sm" title="Xóa hội viên" onclick="xoaHoiVien('${hv.id}', '${safeTen}')"><i class="fas fa-trash-alt"></i></button>`;
 
         hanhDongRow = `<td class="text-center text-nowrap">${btnDuyet}${btnSua}${btnXoa}</td>`;
@@ -179,13 +207,11 @@ async function taiDanhSachHoiVien() {
 
     container.innerHTML = html;
     if (countLabel) countLabel.innerText = data.length;
-
   } catch (err) {
     console.error("Lỗi kết nối CSDL bảng HoiVien:", err);
     container.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">Không thể thiết lập kết nối đồng bộ dữ liệu.</td></tr>`;
   }
 }
-
 // --- CÁC HÀM XỬ LÝ CHỈNH SỬA VÀ XÓA (ADMIN) ---
 
 // 1. Mở Modal và điền dữ liệu cũ vào Form Sửa
@@ -203,7 +229,9 @@ function moModalSuaHoiVien(id, ten, sdt, diachi, status) {
     selectStatus.value = "Chưa duyệt";
   }
 
-  bootstrap.Modal.getOrCreateInstance(document.getElementById("modalSuaHoiVien")).show();
+  bootstrap.Modal.getOrCreateInstance(
+    document.getElementById("modalSuaHoiVien"),
+  ).show();
 }
 
 // 2. Xử lý lưu cập nhật lên Supabase
@@ -215,18 +243,29 @@ async function xuLySuaHoiVien(event) {
   const diaChi = document.getElementById("sua_diaChi").value.trim();
   const status = document.getElementById("sua_status").value;
 
-  Swal.fire({ title: 'Đang lưu thay đổi...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+  Swal.fire({
+    title: "Đang lưu thay đổi...",
+    didOpen: () => Swal.showLoading(),
+    allowOutsideClick: false,
+  });
 
   try {
     const { error } = await supabaseClient
       .from("HoiVien")
-      .update({ hoTen: hoTen, soDienThoai: soDienThoai, diaChi: diaChi, status: status })
+      .update({
+        hoTen: hoTen,
+        soDienThoai: soDienThoai,
+        diaChi: diaChi,
+        status: status,
+      })
       .eq("id", id);
 
     if (error) throw error;
 
     Swal.fire("Thành công!", "Đã cập nhật thông tin hội viên.", "success");
-    bootstrap.Modal.getInstance(document.getElementById("modalSuaHoiVien")).hide();
+    bootstrap.Modal.getInstance(
+      document.getElementById("modalSuaHoiVien"),
+    ).hide();
     taiDanhSachHoiVien();
   } catch (err) {
     console.error(err);
@@ -244,20 +283,35 @@ async function xoaHoiVien(id, ten) {
     confirmButtonColor: "#d33",
     cancelButtonColor: "#6c757d",
     confirmButtonText: "Đồng ý xóa",
-    cancelButtonText: "Hủy"
+    cancelButtonText: "Hủy",
   }).then(async (result) => {
     if (result.isConfirmed) {
-      Swal.fire({ title: 'Đang xóa dữ liệu...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+      Swal.fire({
+        title: "Đang xóa dữ liệu...",
+        didOpen: () => Swal.showLoading(),
+        allowOutsideClick: false,
+      });
 
       try {
-        const { error } = await supabaseClient.from("HoiVien").delete().eq("id", id);
+        const { error } = await supabaseClient
+          .from("HoiVien")
+          .delete()
+          .eq("id", id);
         if (error) throw error;
 
-        Swal.fire("Đã xóa!", `Hồ sơ của ${ten} đã được xóa sạch khỏi hệ thống.`, "success");
+        Swal.fire(
+          "Đã xóa!",
+          `Hồ sơ của ${ten} đã được xóa sạch khỏi hệ thống.`,
+          "success",
+        );
         taiDanhSachHoiVien();
       } catch (err) {
         console.error(err);
-        Swal.fire("Lỗi xóa", "Không thể xóa. Hãy kiểm tra lại quyền DELETE trên Supabase.", "error");
+        Swal.fire(
+          "Lỗi xóa",
+          "Không thể xóa. Hãy kiểm tra lại quyền DELETE trên Supabase.",
+          "error",
+        );
       }
     }
   });
