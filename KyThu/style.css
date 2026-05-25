@@ -1,0 +1,29 @@
+/* --- GIAO DIỆN TRANG THÔNG BÁO ĐANG XÂY DỰNG (QUẢN LÝ KỲ THỦ) --- */
+body {
+  background-color: #eef2f6;
+  font-family: "Segoe UI", sans-serif;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.construction-card {
+  border-radius: 20px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  max-width: 500px;
+  text-align: center;
+  padding: 50px 30px;
+  background: white;
+}
+
+.icon-box {
+  font-size: 65px;
+  /* Dải màu cam hổ phách đồng bộ với thẻ chức năng ở Trang chủ */
+  background: -webkit-linear-gradient(135deg, #ff9900 0%, #ff5500 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 20px;
+}
