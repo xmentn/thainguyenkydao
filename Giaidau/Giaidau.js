@@ -27,10 +27,13 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // --- 1. TẢI DANH SÁCH GIẢI ĐẤU TỪ SUPABASE ---
+// --- 1. TẢI DANH SÁCH GIẢI ĐẤU TỪ SUPABASE ---
 async function taiDuLieuGiaiDau() {
   const container = document.getElementById("danhSachGiaiDau");
+  if (!container) return;
+  // Đổi colspan sang 7 để khớp với số lượng cột mới (có thêm cột Điều lệ)
   container.innerHTML =
-    '<tr><td colspan="6" class="text-center py-4 text-muted fst-italic">Đang tải dữ liệu từ CSDL...</td></tr>';
+    '<tr><td colspan="7" class="text-center py-4 text-muted fst-italic">Đang tải dữ liệu từ CSDL...</td></tr>';
 
   // Lấy số lượng đã đăng ký từ bảng KyThu
   let countMap = {};
@@ -57,25 +60,26 @@ async function taiDuLieuGiaiDau() {
   if (error) {
     console.error("Lỗi Supabase:", error);
     container.innerHTML =
-      '<tr><td colspan="6" class="text-center py-4 text-danger">Lỗi kết nối CSDL. Vui lòng kiểm tra Console.</td></tr>';
+      '<tr><td colspan="7" class="text-center py-4 text-danger">Lỗi kết nối CSDL. Vui lòng kiểm tra Console.</td></tr>';
     return;
   }
 
   if (!data || data.length === 0) {
     container.innerHTML =
-      '<tr><td colspan="6" class="text-center py-4 text-muted">Chưa có thông tin giải đấu nào.</td></tr>';
+      '<tr><td colspan="7" class="text-center py-4 text-muted">Chưa có thông tin giải đấu nào.</td></tr>';
     return;
   }
 
   var html = "";
   data.forEach((item) => {
-    // ÉP KIỂU AN TOÀN: Thử cả chữ hoa và chữ thường theo cấu trúc anh gửi
-    let ma = item.maGiai || item.magiai || "";
-    let ten = item.tenGiai || item.tengiai || "Chưa đặt tên";
+    // ÉP KIỂU AN TOÀN: Giữ nguyên cơ chế bóc tách cả chữ hoa và chữ thường từ code gốc của anh
+    let ma = item.maGiai || item.magiai || item.ma || "";
+    let ten = item.tenGiai || item.tengiai || item.ten || "Chưa đặt tên";
     let dv = item.donVi || item.donvi || "Hệ thống";
     let tg = item.thoiGian || item.thoigian;
     let han = item.hanDangKy || item.handangky;
     let maxP = item.soLuongToiDa || item.soluongtoida;
+    let linkDL = item.linkDieuLe || "";
 
     let safeTen = ten.replace(/'/g, "\\'").replace(/"/g, "&quot;");
     let currentCount = countMap[ma] || 0;
@@ -105,43 +109,50 @@ async function taiDuLieuGiaiDau() {
       }
     }
 
+    // Hiển thị số lượng kỳ thủ đăng ký thực tế
     if (isFull) {
       hienThiHan += `<div class="small mt-1 text-danger fw-bold" style="font-size: 11px;"><i class="fas fa-user-slash me-1"></i>Đã đủ số lượng (${currentCount}/${maxP})</div>`;
     } else if (maxP && !isExpired) {
       hienThiHan += `<div class="small mt-1 text-primary fw-bold" style="font-size: 11px;"><i class="fas fa-users me-1"></i>Đã ĐK: ${currentCount}/${maxP}</div>`;
     }
 
-    // Nút chức năng
+    // Xử lý nút kết quả
     let btnKetQua =
       QUYEN_HAN === "admin"
         ? `
         <button class="btn btn-sm btn-outline-info rounded-pill border shadow-sm bg-white text-info fw-bold mb-1" style="font-size:11px" onclick="xemKetQua('${ma}', '${safeTen}')"><i class="fas fa-eye me-1"></i>Xem KQ</button><br>
         <button class="btn btn-sm btn-dark rounded-pill border shadow-sm" style="font-size:11px" onclick="moModalNhapKetQua('${ma}', '${safeTen}')"><i class="fas fa-trophy me-1"></i>Nhập KQ</button>
-    `
+      `
         : `<button class="btn btn-sm btn-outline-info rounded-pill border shadow-sm bg-white text-info fw-bold" style="font-size:12px" onclick="xemKetQua('${ma}', '${safeTen}')"><i class="fas fa-eye me-1"></i>Xem KQ</button>`;
 
+    // Xử lý nút Đăng ký (Tự động chuyển sang xám và mờ nếu hết hạn hoặc đủ người)
     let btnDangKy =
       isExpired || isFull
         ? `
-        <button class="btn btn-sm btn-secondary rounded-pill fw-bold mb-1" onclick="Swal.fire('Đã đóng', '${isFull ? "Giải đấu này đã đủ số lượng kỳ thủ tối đa!" : "Giải đấu này đã hết hạn đăng ký!"}', 'warning')"><i class="fas fa-lock me-1"></i>Đăng ký</button>
-    `
-        : `<button class="btn btn-sm btn-success rounded-pill fw-bold mb-1" onclick="moModalDangKy('${ma}', '${safeTen}')"><i class="fas fa-edit me-1"></i>Đăng ký</button>`;
+        <button class="btn btn-sm btn-secondary rounded-pill fw-bold mb-1" style="font-size:11px" onclick="Swal.fire('Đã đóng', '${isFull ? "Giải đấu này đã đủ số lượng kỳ thủ tối đa!" : "Giải đấu này đã hết hạn đăng ký!"}', 'warning')"><i class="fas fa-lock me-1"></i>Đăng ký</button>
+      `
+        : `<button class="btn btn-sm btn-success rounded-pill fw-bold mb-1" style="font-size:11px" onclick="moModalDangKy('${ma}', '${safeTen}')"><i class="fas fa-edit"></i> Đăng ký</button>`;
+
+    // --- XỬ LÝ NÚT ĐIỀU LỆ MỚI ---
+    let btnDieuLe = linkDL
+      ? `<button class="btn btn-sm btn-outline-danger rounded-pill fw-bold border shadow-sm bg-white text-danger px-2.5" style="font-size:11px" onclick="xemDieuLePdf('${linkDL}', '${safeTen}')"><i class="fas fa-file-pdf me-1"></i>Xem điều lệ</button>`
+      : `<span class="text-muted small"><i>Chưa gắn</i></span>`;
 
     let adminAction = "";
     if (QUYEN_HAN === "admin") {
       let itemStr = JSON.stringify(item).replace(/"/g, "&quot;");
-      adminAction = `<td class="text-center">
+      adminAction = `<td class="text-center align-middle">
         <button class="btn btn-sm btn-outline-primary p-1 me-2" title="Sửa" onclick="moModalSuaGiaiDau(${itemStr})"><i class="fas fa-edit"></i></button>
         <button class="btn btn-sm btn-outline-danger p-1" title="Xóa" onclick="xoaGiaiDau('${ma}')"><i class="fas fa-trash"></i></button>
       </td>`;
     }
 
     html += `<tr>
-        <td class="ps-3"><div class="fw-bold text-dark" style="font-size:1.1rem">${ten}</div><div class="small text-muted">Mã: ${ma}</div></td>
-        <td class="text-center"><span class="badge bg-light text-dark border"><i class="fas fa-sitemap me-1 text-muted"></i>${dv}</span></td>
-        <td class="text-center fw-bold text-primary">${hienThiThoiGian} ${hienThiHan}</td>
+        <td class="ps-3 text-start"><div class="fw-bold text-dark" style="font-size:1.1rem">${ten}</div><div class="small text-muted">Mã: ${ma}</div></td>
+        <td class="text-center align-middle"><span class="badge bg-light text-dark border"><i class="fas fa-sitemap me-1 text-muted"></i>${dv}</span></td>
+        <td class="text-center align-middle fw-bold text-primary">${hienThiThoiGian} ${hienThiHan}</td>
         <td class="text-center align-middle">${btnDangKy}<br><button class="btn btn-sm btn-light rounded-pill border shadow-sm text-primary mt-1" style="font-size:11px" onclick="xemDanhSachKyThu('${ma}', '${safeTen}')"><i class="fas fa-list me-1"></i>Danh sách</button></td>
-        <td class="text-center align-middle">${btnKetQua}</td>
+        <td class="text-center align-middle">${btnDieuLe}</td> <td class="text-center align-middle">${btnKetQua}</td>
         ${adminAction}
     </tr>`;
   });

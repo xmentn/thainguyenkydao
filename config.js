@@ -76,8 +76,9 @@ async function callAPI(action, params = {}) {
             donVi: params.donVi,
             thoiGian: params.thoiGian || null,
             hanDangKy: params.hanDangKy || null,
+            linkDieuLe: params.linkDieuLe || null,
           })
-          .eq("ma", params.ma);
+          .eq("maGiai", params.ma); // <--- SỬA CHỮA: Đổi "ma" thành "maGiai" cho đúng tên cột trong ảnh của anh
         result = {
           success: !error,
           message: error ? error.message : "Đã cập nhật Giải đấu!",
@@ -86,11 +87,12 @@ async function callAPI(action, params = {}) {
         let maGD = params.ma ? params.ma : "GD" + new Date().getTime();
         const { error } = await supabaseClient.from("GiaiDau").insert([
           {
-            ma: maGD,
+            maGiai: maGD, // <--- SỬA CHỮA: Đổi "ma" thành "maGiai" theo đúng tên cột CSDL
             ten: params.ten,
             donVi: params.donVi,
             thoiGian: params.thoiGian || null,
             hanDangKy: params.hanDangKy || null,
+            linkDieuLe: params.linkDieuLe || null,
           },
         ]);
         result = {
