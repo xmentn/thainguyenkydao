@@ -1,129 +1,130 @@
-// Thiết lập đường dẫn tĩnh lưu trữ file quy chế trên Supabase Storage
-const PDF_PUBLIC_URL = `${SUPABASE_URL}/storage/v1/object/public/clb_assets/quy_che.pdf`;
+// ============================================================================
+// LOGIC XỬ LÝ PHÂN HỆ HỘI VIÊN & QUY CHẾ CLB - FIRESTORE 100%
+// ============================================================================
 var QUYEN_HAN = getQuyenHan();
+var linkQuyCheGoc = ""; // Lưu link thô cấu hình
 
 // Khởi chạy hệ thống ngay khi trang web tải xong giao diện
 document.addEventListener("DOMContentLoaded", function () {
   // 1. Kiểm tra đặc quyền Admin để mở rộng bảng điều khiển quản trị viên
   if (QUYEN_HAN === "admin") {
-    // Hiện khung màu vàng cho phép chọn và tải file PDF quy chế lên
     let adminBox = document.getElementById("khoiAdminQuyChe");
     if (adminBox) adminBox.style.display = "block";
 
-    // Mở khóa hiển thị thêm cột Số điện thoại và cột chức năng Thao tác duyệt
     if (document.getElementById("th_sdt"))
       document.getElementById("th_sdt").style.display = "table-cell";
     if (document.getElementById("th_hanhDong"))
       document.getElementById("th_hanhDong").style.display = "table-cell";
   }
 
-  // 2. Kích hoạt hiển thị khung đọc tài liệu quy chế PDF trực tuyến
-  docQuyChePdf();
+  // 2. Kích hoạt hiển thị khung đọc tài liệu quy chế PDF trực tuyến từ Firebase
+  taiCấuHinhQuyChe();
 
-  // 3. Thực hiện tải danh sách hội viên chính thức từ cơ sở dữ liệu
+  // 3. Thực hiện tải danh sách hội viên chính thức từ Firebase Cloud Firestore
   taiDanhSachHoiVien();
 });
 
 // ============================================================================
-// CHỨC NĂNG 1: QUẢN LÝ VÀ HIỂN THỊ FILE PDF QUY CHẾ (KHO LƯU TRỮ STORAGE)
+// CHỨC NĂNG 1: QUẢN LÝ VÀ CHUYỂN ĐỔI LINK FILE PDF QUY CHẾ TRỰC TUYẾN
 // ============================================================================
 
-function docQuyChePdf() {
+async function taiCấuHinhQuyChe() {
   const container = document.getElementById("khungHienThiQuyChe");
   if (!container) return;
 
-  // Sử dụng đuôi thời gian biến thiên (?t=...) để triệt tiêu bộ nhớ đệm (cache) của trình duyệt
-  const urlKhongCache = `${PDF_PUBLIC_URL}?t=${new Date().getTime()}`;
+  try {
+    // Đọc link quy chế được lưu tại collection "CauHinh" có mã tài liệu là "QuyChe"
+    const docSnap = await db.collection("CauHinh").doc("QuyChe").get();
 
-  // Vẽ giao diện khung nhúng iframe đọc tài liệu phối hợp nút bấm tải trực tiếp phục vụ di động
-  container.innerHTML = `
-    <div class="d-flex justify-content-end mb-3">
-      <a href="${urlKhongCache}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill fw-bold">
-        <i class="fas fa-download me-1"></i> Xem toàn màn hình / Tải PDF quy chế
-      </a>
-    </div>
-    <div class="ratio ratio-4x3 border rounded-3 overflow-hidden shadow-sm bg-light" style="min-height: 600px;">
-      <iframe src="${urlKhongCache}" allow="autoplay">
-        <p>Trình duyệt của bạn không hỗ trợ hiển thị tệp PDF trực tiếp. Vui lòng bấm nút tải về ở trên để đọc văn bản.</p>
-      </iframe>
-    </div>
-  `;
+    if (docSnap.exists && docSnap.data().link) {
+      linkQuyCheGoc = docSnap.data().link;
+      if (document.getElementById("txtLinkQuyChe")) {
+        document.getElementById("txtLinkQuyChe").value = linkQuyCheGoc;
+      }
+
+      // THUẬT TOÁN BẺ LINK GOOGLE DRIVE SANG DẠNG PREVIEW ĐỂ NHÚNG KHÔNG BỊ CHẶN
+      let urlHienThi = linkQuyCheGoc;
+      if (linkQuyCheGoc.includes("drive.google.com")) {
+        // Nếu link có dạng /file/d/XYZ/view?usp=sharing hoặc tương tự
+        if (linkQuyCheGoc.includes("/view")) {
+          urlHienThi = linkQuyCheGoc.split("/view")[0] + "/preview";
+        } else if (!linkQuyCheGoc.endsWith("/preview")) {
+          // Trường hợp link thô chỉ tới ID, làm sạch rồi bọc đuôi /preview
+          urlHienThi =
+            linkQuyCheGoc.trim().replace(/\?usp=sharing/g, "") + "/preview";
+        }
+      }
+
+      container.innerHTML = `
+        <div class="d-flex justify-content-end mb-3">
+          <a href="${linkQuyCheGoc}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill fw-bold">
+            <i class="fas fa-external-link-alt me-1"></i> Mở bằng tab mới / Tải Quy chế
+          </a>
+        </div>
+        <div class="ratio ratio-4x3 border rounded-3 overflow-hidden shadow-sm bg-light" style="min-height: 600px;">
+          <iframe src="${urlHienThi}" allow="autoplay"></iframe>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `<div class="alert alert-light text-muted py-4">Ban chủ nhiệm chưa cấu hình link tài liệu Quy chế hoạt động.</div>`;
+    }
+  } catch (e) {
+    console.error("Lỗi lấy cấu hình quy chế:", e);
+    container.innerHTML = `<div class="alert alert-danger py-3">Không thể kết nối CSDL lấy file văn bản Quy chế.</div>`;
+  }
 }
 
-async function taiLenQuyChePdf() {
-  const fileInput = document.getElementById("fileQuyChePdf");
-  if (!fileInput || fileInput.files.length === 0) {
+// Lưu link cấu hình quy chế mới (Admin)
+async function capNhatLinkQuyChe() {
+  const txtLink = document.getElementById("txtLinkQuyChe");
+  if (!txtLink || !txtLink.value.trim()) {
     Swal.fire(
       "Thông báo",
-      "Vui lòng chọn một tệp tin PDF trước khi click tải lên!",
+      "Vui lòng dán link Google Drive file Quy chế trước!",
       "warning",
     );
     return;
   }
 
-  const file = fileInput.files[0];
-
-  // Chặn định dạng dữ liệu lạ, chỉ chấp nhận tệp mở rộng .pdf
-  if (file.type !== "application/pdf") {
-    Swal.fire(
-      "Lỗi định dạng",
-      "Hệ thống chỉ chấp nhận lưu trữ tệp dữ liệu định dạng .pdf chuẩn!",
-      "error",
-    );
-    return;
-  }
-
-  // Hiện hộp thoại xoay loading ngăn thao tác click chuột trùng lặp
   Swal.fire({
-    title: "Đang đẩy tệp lên máy chủ...",
-    text: "Quá trình xử lý diễn ra trong vài giây, vui lòng không tắt trình duyệt.",
+    title: "Đang lưu cấu hình...",
     didOpen: () => Swal.showLoading(),
     allowOutsideClick: false,
   });
 
   try {
-    // Thực hiện đẩy file lên bucket clb_assets với cấu hình upsert: true ghi đè
-    const { error } = await supabaseClient.storage
-      .from("clb_assets")
-      .upload("quy_che.pdf", file, {
-        cacheControl: "0",
-        upsert: true,
-      });
-
-    if (error) throw error;
+    await db.collection("CauHinh").doc("QuyChe").set({
+      link: txtLink.value.trim(),
+      ngayCapNhat: new Date().toISOString(),
+    });
 
     Swal.fire(
       "Thành công",
-      "Văn bản quy chế hoạt động mới đã được áp dụng toàn hệ thống!",
+      "Văn bản quy chế mới đã được áp dụng toàn hệ thống!",
       "success",
     );
-    fileInput.value = ""; // Dọn sạch ô chọn file
-    docQuyChePdf(); // Tải lại khung hiển thị văn bản mới ngay lập tức
+    taiCấuHinhQuyChe();
   } catch (err) {
-    console.error("Lỗi Storage:", err);
+    console.error(err);
     Swal.fire(
-      "Tải lên thất bại",
-      "Lỗi phân quyền lưu trữ hoặc do chưa cấu hình chính sách INSERT/UPDATE cho bucket.",
+      "Thất bại",
+      "Lỗi phân quyền Firebase khi cập nhật cấu hình!",
       "error",
     );
   }
 }
 
-// ============================================================================
-// CHỨC NĂNG 2: TRA CỨU ĐĂNG KÝ VÀ PHÊ DUYỆT HỘI VIÊN (BẢNG DATABASE HoiVien)
-// ============================================================================
-
-// --- HÀM TẢI DANH SÁCH HỘI VIÊN (ĐÃ NÂNG CẤP SẮP XẾP A-Z CHUẨN TIẾNG VIỆT) ---
+// --- HÀM TẢI DANH SÁCH HỘI VIÊN (ĐÃ TỐI ƯU ÉP KIỂU AN TOÀN CHO FIREBASE) ---
 async function taiDanhSachHoiVien() {
   const container = document.getElementById("bangHoiVien");
   const countLabel = document.getElementById("tongSoHoiVien");
   if (!container) return;
 
-  try {
-    // Tải toàn bộ dữ liệu từ bảng (chưa sắp xếp)
-    const { data, error } = await supabaseClient.from("HoiVien").select("*");
+  container.innerHTML = `<tr><td colspan="${QUYEN_HAN === "admin" ? 6 : 4}" class="text-center py-4 text-muted fst-italic">Đang tải danh sách thành viên từ CSDL Firebase...</td></tr>`;
 
-    if (error) throw error;
+  try {
+    // Tải toàn bộ danh sách hội viên từ hàm callAPI chung của config.js
+    const data = await callAPI("getHoiVien");
 
     if (!data || data.length === 0) {
       container.innerHTML = `<tr><td colspan="${QUYEN_HAN === "admin" ? 6 : 4}" class="text-center py-4 text-muted">Hệ thống chưa ghi nhận dữ liệu hội viên nào.</td></tr>`;
@@ -131,9 +132,7 @@ async function taiDanhSachHoiVien() {
       return;
     }
 
-    // --- THUẬT TOÁN TÁCH TÊN VÀ SẮP XẾP TIẾNG VIỆT ---
-
-    // Hàm phụ: Lấy từ cuối cùng trong chuỗi "Họ và Tên"
+    // --- THUẬT TOÁN TÁCH TÊN VÀ SẮP XẾP TIẾNG VIỆT CHUẨN XÁC ---
     const layTenChinh = (hoTenFull) => {
       if (!hoTenFull) return "";
       let parts = hoTenFull.trim().split(" ");
@@ -141,26 +140,21 @@ async function taiDanhSachHoiVien() {
     };
 
     data.sort((a, b) => {
-      // 1. Ưu tiên nhóm: Xếp người "Chưa duyệt" (số 0) lên trước người "Đã duyệt" (số 1)
+      // 1. Ưu tiên đưa người "Chưa duyệt" lên hàng đầu để Ban chủ nhiệm nhìn thấy ngay
       let uuTienA = a.status === "Chưa duyệt" ? 0 : 1;
       let uuTienB = b.status === "Chưa duyệt" ? 0 : 1;
+      if (uuTienA !== uuTienB) return uuTienA - uuTienB;
 
-      if (uuTienA !== uuTienB) {
-        return uuTienA - uuTienB;
-      }
-
-      // 2. Nếu cùng nhóm trạng thái, tiến hành so sánh theo Tên chính
+      // 2. Sắp xếp theo tên chính (A-Z) chuẩn từ ngữ Tiếng Việt
       let tenA = layTenChinh(a.hoTen);
       let tenB = layTenChinh(b.hoTen);
-
-      let soSanhTen = tenA.localeCompare(tenB, "vi"); // 'vi' giúp nhận diện chuẩn bảng chữ cái VN
+      let soSanhTen = tenA.localeCompare(tenB, "vi");
       if (soSanhTen !== 0) return soSanhTen;
 
-      // 3. Nếu trùng cả Tên chính, tiến hành so sánh toàn bộ Họ và Tên
       return (a.hoTen || "").localeCompare(b.hoTen || "", "vi");
     });
 
-    // --- TIẾN HÀNH VẼ BẢNG GIAO DIỆN ---
+    // --- TIẾN HÀNH DỰNG GIAO DIỆN BẢNG ---
     var html = "";
     data.forEach((hv, i) => {
       let isApproved =
@@ -170,34 +164,43 @@ async function taiDanhSachHoiVien() {
         ? `<span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2 py-1.5 rounded"><i class="fas fa-check-circle me-1"></i>Thành viên chính thức</span>`
         : `<span class="badge bg-warning-subtle text-warning border border-warning border-opacity-25 px-2 py-1.5 rounded"><i class="fas fa-clock me-1"></i>Chưa được duyệt</span>`;
 
+      // ÉP KIỂU AN TOÀN: Chuyển đổi số điện thoại dạng Number thành String và bù số 0 nếu thiếu
+      let sdtTho =
+        hv.soDienThoai !== undefined && hv.soDienThoai !== null
+          ? String(hv.soDienThoai).trim()
+          : "";
+      if (sdtTho !== "" && !sdtTho.startsWith("0") && sdtTho.length === 9) {
+        sdtTho = "0" + sdtTho; // Tự động thêm lại số 0 cho đẹp giao diện
+      }
+
       let sdtRow =
         QUYEN_HAN === "admin"
-          ? `<td class="text-center text-secondary small fw-bold">${hv.soDienThoai || "-"}</td>`
+          ? `<td class="text-center text-secondary small fw-bold">${sdtTho || "-"}</td>`
           : "";
 
-      // Xử lý an toàn chuỗi văn bản
-      let safeTen = (hv.hoTen || "").replace(/'/g, "\\'");
-      let safeSdt = (hv.soDienThoai || "").replace(/'/g, "\\'");
-      let safeDiaChi = (hv.diaChi || "").replace(/'/g, "\\'");
-      let safeStatus = (hv.status || "").replace(/'/g, "\\'");
+      // Khử ký tự lạ để tránh lỗi cú pháp khi truyền vào hàm onclick
+      let safeId = String(hv.id || "").replace(/'/g, "\\'");
+      let safeTen = String(hv.hoTen || "").replace(/'/g, "\\'");
+      let safeSdt = sdtTho.replace(/'/g, "\\'");
+      let safeDiaChi = String(hv.diaChi || "").replace(/'/g, "\\'");
+      let safeStatus = String(hv.status || "").replace(/'/g, "\\'");
 
-      // Bộ 3 nút thao tác Admin
       let hanhDongRow = "";
       if (QUYEN_HAN === "admin") {
         let btnDuyet = !isApproved
-          ? `<button class="btn btn-sm btn-success px-2 py-1 me-1 shadow-sm" title="Duyệt ngay" onclick="pheDuyetThanhVien('${hv.id}', '${safeTen}')"><i class="fas fa-check"></i></button>`
+          ? `<button class="btn btn-sm btn-success px-2 py-1 me-1 shadow-sm" title="Duyệt ngay" onclick="pheDuyetThanhVien('${safeId}', '${safeTen}')"><i class="fas fa-check"></i></button>`
           : `<button class="btn btn-sm btn-secondary px-2 py-1 me-1 opacity-25" disabled><i class="fas fa-check"></i></button>`;
 
-        let btnSua = `<button class="btn btn-sm btn-primary px-2 py-1 me-1 shadow-sm" title="Sửa thông tin" onclick="moModalSuaHoiVien('${hv.id}', '${safeTen}', '${safeSdt}', '${safeDiaChi}', '${safeStatus}')"><i class="fas fa-edit"></i></button>`;
+        let btnSua = `<button class="btn btn-sm btn-primary px-2 py-1 me-1 shadow-sm" title="Sửa thông tin" onclick="moModalSuaHoiVien('${safeId}', '${safeTen}', '${safeSdt}', '${safeDiaChi}', '${safeStatus}')"><i class="fas fa-edit"></i></button>`;
 
-        let btnXoa = `<button class="btn btn-sm btn-danger px-2 py-1 shadow-sm" title="Xóa hội viên" onclick="xoaHoiVien('${hv.id}', '${safeTen}')"><i class="fas fa-trash-alt"></i></button>`;
+        let btnXoa = `<button class="btn btn-sm btn-danger px-2 py-1 shadow-sm" title="Xóa hội viên" onclick="xoaHoiVien('${safeId}', '${safeTen}')"><i class="fas fa-trash-alt"></i></button>`;
 
         hanhDongRow = `<td class="text-center text-nowrap">${btnDuyet}${btnSua}${btnXoa}</td>`;
       }
 
       html += `<tr>
         <td class="text-center fw-bold text-muted">${i + 1}</td>
-        <td class="fw-bold text-dark ps-2">${hv.hoTen}</td>
+        <td class="fw-bold text-dark ps-2">${hv.hoTen || "Chưa rõ tên"}</td>
         <td class="text-muted small">${hv.diaChi || "-"}</td>
         ${sdtRow}
         <td class="text-center">${statusBadge}</td>
@@ -208,20 +211,17 @@ async function taiDanhSachHoiVien() {
     container.innerHTML = html;
     if (countLabel) countLabel.innerText = data.length;
   } catch (err) {
-    console.error("Lỗi kết nối CSDL bảng HoiVien:", err);
-    container.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">Không thể thiết lập kết nối đồng bộ dữ liệu.</td></tr>`;
+    console.error("Lỗi dựng bảng hội viên:", err);
+    container.innerHTML = `<tr><td colspan="${QUYEN_HAN === "admin" ? 6 : 4}" class="text-center py-4 text-danger">Lỗi xử lý dữ liệu cấu trúc Firestore. Vui lòng kiểm tra Console.</td></tr>`;
   }
 }
-// --- CÁC HÀM XỬ LÝ CHỈNH SỬA VÀ XÓA (ADMIN) ---
 
-// 1. Mở Modal và điền dữ liệu cũ vào Form Sửa
 function moModalSuaHoiVien(id, ten, sdt, diachi, status) {
   document.getElementById("sua_id").value = id;
   document.getElementById("sua_hoTen").value = ten;
   document.getElementById("sua_soDienThoai").value = sdt;
   document.getElementById("sua_diaChi").value = diachi;
 
-  // Tự động chọn đúng trạng thái hiện tại
   let selectStatus = document.getElementById("sua_status");
   if (status === "Đã duyệt" || status === "Thành viên chính thức") {
     selectStatus.value = "Đã duyệt";
@@ -234,7 +234,6 @@ function moModalSuaHoiVien(id, ten, sdt, diachi, status) {
   ).show();
 }
 
-// 2. Xử lý lưu cập nhật lên Supabase
 async function xuLySuaHoiVien(event) {
   event.preventDefault();
   const id = document.getElementById("sua_id").value;
@@ -243,45 +242,43 @@ async function xuLySuaHoiVien(event) {
   const diaChi = document.getElementById("sua_diaChi").value.trim();
   const status = document.getElementById("sua_status").value;
 
+  let dataUpdate = {
+    id: id,
+    hoTen: hoTen,
+    soDienThoai: soDienThoai,
+    diaChi: diaChi,
+    status: status,
+  };
+
   Swal.fire({
     title: "Đang lưu thay đổi...",
     didOpen: () => Swal.showLoading(),
     allowOutsideClick: false,
   });
 
-  try {
-    const { error } = await supabaseClient
-      .from("HoiVien")
-      .update({
-        hoTen: hoTen,
-        soDienThoai: soDienThoai,
-        diaChi: diaChi,
-        status: status,
-      })
-      .eq("id", id);
-
-    if (error) throw error;
-
-    Swal.fire("Thành công!", "Đã cập nhật thông tin hội viên.", "success");
+  var res = await callAPI("saveHoiVien", dataUpdate);
+  if (res && res.success) {
+    Swal.fire("Thành công!", res.message, "success");
     bootstrap.Modal.getInstance(
       document.getElementById("modalSuaHoiVien"),
     ).hide();
     taiDanhSachHoiVien();
-  } catch (err) {
-    console.error(err);
-    Swal.fire("Lỗi cập nhật", "Có lỗi xảy ra, không thể lưu dữ liệu.", "error");
+  } else {
+    Swal.fire(
+      "Lỗi cập nhật",
+      "Không thể ghi tệp thay đổi lên Firebase.",
+      "error",
+    );
   }
 }
 
-// 3. Xử lý lệnh Xóa hội viên
 async function xoaHoiVien(id, ten) {
   Swal.fire({
     title: "Xóa vĩnh viễn?",
-    text: `Bạn có chắc chắn muốn xóa hồ sơ của "${ten}" không? Thao tác này không thể hoàn tác!`,
+    text: `Hủy bỏ hoàn toàn hồ sơ hội viên của anh "${ten}" khỏi CSDL Firebase?`,
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#d33",
-    cancelButtonColor: "#6c757d",
     confirmButtonText: "Đồng ý xóa",
     cancelButtonText: "Hủy",
   }).then(async (result) => {
@@ -293,23 +290,17 @@ async function xoaHoiVien(id, ten) {
       });
 
       try {
-        const { error } = await supabaseClient
-          .from("HoiVien")
-          .delete()
-          .eq("id", id);
-        if (error) throw error;
-
+        await db.collection("HoiVien").doc(id).delete();
         Swal.fire(
           "Đã xóa!",
-          `Hồ sơ của ${ten} đã được xóa sạch khỏi hệ thống.`,
+          "Hồ sơ thành viên đã bốc hơi khỏi hệ thống.",
           "success",
         );
         taiDanhSachHoiVien();
       } catch (err) {
-        console.error(err);
         Swal.fire(
           "Lỗi xóa",
-          "Không thể xóa. Hãy kiểm tra lại quyền DELETE trên Supabase.",
+          "Có xung đột hoặc lỗi phân quyền kết nối Firebase.",
           "error",
         );
       }
@@ -318,50 +309,37 @@ async function xoaHoiVien(id, ten) {
 }
 
 async function xuLyDangKyHoiVien(event) {
-  event.preventDefault(); // Triệt tiêu hành động tải lại trang mặc định của form mẫu
-
+  event.preventDefault();
   const hoTen = document.getElementById("dk_hoTen").value.trim();
   const soDienThoai = document.getElementById("dk_soDienThoai").value.trim();
   const diaChi = document.getElementById("dk_diaChi").value.trim();
 
   Swal.fire({
-    title: "Đang truyền dữ liệu đăng ký...",
+    title: "Đang gửi đơn...",
     didOpen: () => Swal.showLoading(),
     allowOutsideClick: false,
   });
 
-  try {
-    // Đẩy bản ghi mới vào CSDL với trạng thái mặc định ép cứng là 'Chưa duyệt'
-    const { error } = await supabaseClient.from("HoiVien").insert([
-      {
-        hoTen: hoTen,
-        soDienThoai: soDienThoai,
-        diaChi: diaChi,
-        status: "Chưa duyệt",
-      },
-    ]);
-
-    if (error) throw error;
-
+  var res = await callAPI("saveHoiVien", {
+    hoTen: hoTen,
+    soDienThoai: soDienThoai,
+    diaChi: diaChi,
+  });
+  if (res && res.success) {
     Swal.fire(
       "Gửi đơn thành công!",
-      "Thông tin gia nhập của bạn đã được chuyển tới danh sách chờ duyệt của Ban chủ nhiệm.",
+      "Thông tin của bạn đã nằm trong danh sách chờ duyệt của Ban chủ nhiệm.",
       "success",
     );
-
-    // Thu nhỏ cửa sổ modal và xóa trắng các trường dữ liệu biểu mẫu nhập
     bootstrap.Modal.getInstance(
       document.getElementById("modalDangKyHoiVien"),
     ).hide();
     document.getElementById("formDangKyHoiVien").reset();
-
-    // Cập nhật lại giao diện lưới bảng ngay lập tức để người đăng ký thấy tên mình ở trạng thái chờ duyệt
     taiDanhSachHoiVien();
-  } catch (err) {
-    console.error("Lỗi gửi dữ liệu đăng ký:", err);
+  } else {
     Swal.fire(
-      "Lỗi hệ thống",
-      "Không thể hoàn tất việc gửi đơn. Hãy kiểm tra lại cấu hình quyền INSERT công khai trên Supabase.",
+      "Lỗi đơn",
+      "Không thể đẩy thông tin lên máy chủ Firebase.",
       "error",
     );
   }
@@ -370,41 +348,32 @@ async function xuLyDangKyHoiVien(event) {
 async function pheDuyetThanhVien(id, ten) {
   Swal.fire({
     title: "Phê duyệt hội viên chính thức?",
-    text: `Xác nhận phê chuẩn cho thành viên "${ten}" tham gia vào tổ chức CLB Thái Nguyên Kỳ Đạo?`,
+    text: `Xác nhận phê chuẩn cấp quyền hoạt động chính thức cho anh "${ten}"?`,
     icon: "question",
     showCancelButton: true,
     confirmButtonColor: "#28a745",
-    cancelButtonColor: "#6c757d",
     confirmButtonText: "Đồng ý duyệt",
     cancelButtonText: "Hủy",
   }).then(async (result) => {
     if (result.isConfirmed) {
       Swal.fire({
-        title: "Đang cập nhật trạng thái hồ sơ...",
+        title: "Đang duyệt hồ sơ...",
         didOpen: () => Swal.showLoading(),
         allowOutsideClick: false,
       });
 
       try {
-        // Cập nhật trường dữ liệu status sang 'Đã duyệt' khớp điều kiện ID chỉ định
-        const { error } = await supabaseClient
-          .from("HoiVien")
-          .update({ status: "Đã duyệt" })
-          .eq("id", id);
-
-        if (error) throw error;
-
+        await db.collection("HoiVien").doc(id).update({ status: "Đã duyệt" });
         Swal.fire(
           "Phê duyệt hoàn tất!",
-          `Thành viên ${ten} đã chính thức trở thành hội viên chính thức.`,
+          `Anh ${ten} đã trở thành hội viên chính thức.`,
           "success",
         );
-        taiDanhSachHoiVien(); // Tải và vẽ lại bảng dữ liệu mới
+        taiDanhSachHoiVien();
       } catch (err) {
-        console.error("Lỗi cập nhật dữ liệu phê duyệt:", err);
         Swal.fire(
           "Lỗi phê duyệt",
-          "Thao tác thất bại. Hãy chắc chắn anh đã tạo chính sách cấp quyền UPDATE cho bảng dữ liệu.",
+          "Không thể ghi nhận trạng thái mới lên Firebase.",
           "error",
         );
       }
@@ -428,7 +397,6 @@ function locHoiVien() {
       r.style.display = "none";
     }
   });
-
   if (document.getElementById("tongSoHoiVien")) {
     document.getElementById("tongSoHoiVien").innerText = count;
   }

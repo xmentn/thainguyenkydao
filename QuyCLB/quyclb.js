@@ -1,5 +1,5 @@
 // ============================================================
-// LOGIC XỬ LÝ TRANG QUỸ CÂU LẠC BỘ
+// LOGIC XỬ LÝ TRANG QUỸ CÂU LẠC BỘ - FIRESTORE
 // ============================================================
 var QUYEN_HAN = getQuyenHan();
 var chart1 = null;
@@ -21,10 +21,8 @@ document.addEventListener("DOMContentLoaded", function () {
   if (QUYEN_HAN !== "") {
     document.getElementById("login-container").style.display = "none";
     document.getElementById("app-container").style.display = "block";
-    document.getElementById("user-name").innerText = getUserName().replace(
-      " Xem",
-      "",
-    );
+    let activeName = getUserName() ? getUserName().replace(" Xem", "") : "...";
+    document.getElementById("user-name").innerText = activeName;
     phanQuyenGiaoDien();
     khoiTaoApp();
   } else {
@@ -59,29 +57,34 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
+// Xử lý đăng nhập đồng bộ phân quyền hệ thống
 async function xuLyDangNhap(event) {
   event.preventDefault();
-  const u = document.getElementById("username").value;
-  const p = document.getElementById("password").value;
+  const u = document.getElementById("username").value.trim();
+  const p = document.getElementById("password").value.trim();
 
+  Swal.fire({
+    title: "Đang xác thực...",
+    didOpen: () => Swal.showLoading(),
+    allowOutsideClick: false,
+  });
   const res = await callAPI("login", { username: u, password: p });
 
   if (res && res.success) {
-    // LƯU VÀO SESSION ĐỂ DÙNG CHUNG CHO CẢ GIẢI ĐẤU
+    // Lưu thông tin vào Session để các phân hệ khác cùng dùng chung
     sessionStorage.setItem("QUYEN_HAN", res.role);
     sessionStorage.setItem("USER_NAME", res.name);
     QUYEN_HAN = res.role;
 
-    document.getElementById("user-name").innerText = res.name.replace(
-      " Xem",
-      "",
-    );
+    let cleanName = res.name.replace(" Xem", "");
+    document.getElementById("user-name").innerText = cleanName;
     document.getElementById("login-container").style.display = "none";
     document.getElementById("app-container").style.display = "block";
 
     phanQuyenGiaoDien();
     khoiTaoApp();
 
+    Swal.close();
     const Toast = Swal.mixin({
       toast: true,
       position: "top-end",
@@ -90,27 +93,27 @@ async function xuLyDangNhap(event) {
     });
     Toast.fire({
       icon: "success",
-      title: "Xin chào, " + res.name.replace(" Xem", ""),
+      title: "Xin chào, " + cleanName,
     });
   } else {
     Swal.fire(
       "Đăng nhập thất bại",
-      "Sai tên đăng nhập hoặc mật khẩu!",
+      "Sai tên đăng nhập hoặc mật khẩu quản trị!",
       "error",
     );
   }
 }
 
+// Ẩn/Hiện nút thông minh dựa theo vai trò phân quyền thực tế
 function phanQuyenGiaoDien() {
-  document
-    .querySelectorAll(".admin-only")
-    .forEach((el) =>
-      el.style.setProperty(
-        "display",
-        QUYEN_HAN === "admin" || QUYEN_HAN === "thuquy" ? "flex" : "none",
-        "important",
-      ),
-    );
+  const isAdminOrThuQuy = QUYEN_HAN === "admin" || QUYEN_HAN === "thuquy";
+  document.querySelectorAll(".admin-only").forEach((el) => {
+    if (isAdminOrThuQuy) {
+      el.style.setProperty("display", "flex", "important");
+    } else {
+      el.style.setProperty("display", "none", "important");
+    }
+  });
 }
 
 function khoiTaoApp() {
@@ -125,7 +128,7 @@ function khoiTaoApp() {
   document.getElementById("searchDenNgay").valueAsDate = today;
 }
 
-// BÁO CÁO THỐNG KÊ
+// Tải dữ liệu báo cáo thống kê từ Firebase thông qua hàm callAPI chung
 async function taiDuLieuBaoCao() {
   const data = await callAPI("getReport");
   if (!data) return;
@@ -259,7 +262,6 @@ function veBieuDoNguonThu(data) {
   });
 }
 
-// CHUYỂN MÀN HÌNH VÀ FORM NHẬP
 function chuyenManHinh(mh) {
   ["dashboard", "form", "search"].forEach(
     (id) => (document.getElementById("view-" + id).style.display = "none"),
@@ -280,6 +282,12 @@ async function handleFormSubmit(event) {
     nguoiLienQuan: document.getElementById("nguoiLienQuan").value,
     ghiChu: document.getElementById("ghiChu").value,
   };
+
+  Swal.fire({
+    title: "Đang lưu giao dịch...",
+    didOpen: () => Swal.showLoading(),
+    allowOutsideClick: false,
+  });
   var res = await callAPI("save", data);
   if (res && res.success) {
     document.getElementById("myForm").reset();
@@ -290,7 +298,6 @@ async function handleFormSubmit(event) {
   }
 }
 
-// TÌM KIẾM SỬA XÓA
 async function thucHienTimKiem() {
   var tu = document.getElementById("searchTuNgay").value,
     den = document.getElementById("searchDenNgay").value;
@@ -317,7 +324,7 @@ async function thucHienTimKiem() {
 
   if (!data || data.length == 0) {
     divKetQua.innerHTML =
-      '<div class="alert alert-warning text-center mt-3">Không tìm thấy dữ liệu!</div>';
+      '<div class="alert alert-warning text-center mt-3">Không tìm thấy dữ liệu giao dịch!</div>';
     return;
   }
 
@@ -330,7 +337,7 @@ async function thucHienTimKiem() {
       soHienVat++;
       if (chiTietHienVat.length < 5) chiTietHienVat.push(item.ghiChu);
     } else {
-      tongTien += parseInt(item.tien);
+      tongTien += parseInt(item.tien || 0);
     }
   });
 
@@ -338,14 +345,14 @@ async function thucHienTimKiem() {
     style: "currency",
     currency: "VND",
   });
-  divTongHop.innerHTML = `<div class="card card-box bg-primary bg-opacity-10 border-0 p-3 mb-3"><div class="row text-center"><div class="col-4 border-end border-primary"><small class="text-primary fw-bold text-uppercase">Số phiếu</small><div class="h5 fw-bold text-dark mb-0">${soPhieu}</div></div><div class="col-4 border-end border-primary"><small class="text-primary fw-bold text-uppercase">Hiện vật</small><div class="h5 fw-bold text-dark mb-0">${soHienVat}</div></div><div class="col-4"><small class="text-primary fw-bold text-uppercase">Tổng tiền</small><div class="h5 fw-bold text-danger mb-0">${fmt.format(tongTien)}</div></div></div>${soHienVat > 0 ? `<div class="mt-2 text-center small text-muted fst-italic border-top border-primary pt-2">🎁 Các hiện vật: ${chiTietHienVat.join(", ")}...</div>` : ""}</div>`;
+  divTongHop.innerHTML = `<div class="card card-box bg-primary bg-opacity-10 border-0 p-3 mb-3"><div class="row text-center"><div class="col-4 border-end border-primary"><small class="text-primary fw-bold text-uppercase">Số phiếu</small><div class="h5 fw-bold text-dark mb-0">${soPhieu}</div></div><div class="col-4 border-end border-primary"><small class="text-primary fw-bold text-uppercase">Hiện vật</small><div class="h5 fw-bold text-dark mb-0">${soHienVat}</div></div><div class="col-4"><small class="text-primary fw-bold text-uppercase">Tổng tiền</small><div class="h5 fw-bold text-danger mb-0">${fmt.format(tongTien)}</div></div></div>${soHienVat > 0 ? `<div class="mt-2 text-center small text-muted fst-italic border-top border-primary pt-2">🎁 Hiện vật: ${chiTietHienVat.join(", ")}...</div>` : ""}</div>`;
 
   divKetQua.innerHTML = `<div class="card card-box p-0 overflow-hidden"><table class="table mb-0 table-hover"><thead class="bg-light"><tr><th class="ps-3">Ngày</th><th>Nội dung</th><th class="text-end">Số tiền</th><th class="text-center">#</th></tr></thead><tbody id="tableBody"></tbody></table></div>`;
   currentIndex = 0;
-  xemThemKetQua();
+  xemThequyetKetQua();
 }
 
-function xemThemKetQua() {
+function xemThequyetKetQua() {
   var tableBody = document.getElementById("tableBody"),
     btnMore = document.getElementById("btnXemTiepContainer");
   var nextBatch = duLieuTimKiem.slice(currentIndex, currentIndex + pageSize),
@@ -375,6 +382,11 @@ function xemThemKetQua() {
       btnMore.style.display = "none";
     }
   }
+}
+
+// Gọi bí danh cho hàm đồng bộ
+function xemThemKetQua() {
+  xemThequyetKetQua();
 }
 
 function moModalSua(item) {
@@ -407,6 +419,12 @@ async function luuSua() {
     nguoiLienQuanEdit: document.getElementById("nguoiLienQuanEdit").value,
     ghiChuEdit: document.getElementById("ghiChuEdit").value,
   };
+
+  Swal.fire({
+    title: "Đang cập nhật...",
+    didOpen: () => Swal.showLoading(),
+    allowOutsideClick: false,
+  });
   var res = await callAPI("update", data);
   if (res && res.success) {
     Swal.fire("Đã cập nhật", res.message, "success");
@@ -418,18 +436,34 @@ async function luuSua() {
 }
 
 async function xoaItem(id) {
-  if (confirm("Bạn chắc chắn muốn xóa giao dịch này?")) {
-    var res = await callAPI("delete", { id: id });
-    if (res.success) {
-      Swal.fire("Đã xóa", res.message, "success");
-      thucHienTimKiem();
+  Swal.fire({
+    title: "Bạn chắc chắn muốn xóa?",
+    text: "Giao dịch này sẽ bị xóa vĩnh viễn khỏi CSDL Firebase!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    confirmButtonText: "Đồng ý xóa",
+    cancelButtonText: "Hủy",
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      Swal.fire({
+        title: "Đang xóa...",
+        didOpen: () => Swal.showLoading(),
+        allowOutsideClick: false,
+      });
+      var res = await callAPI("delete", { id: id });
+      if (res && res.success) {
+        Swal.fire("Đã xóa", res.message, "success");
+        thucHienTimKiem();
+      }
     }
-  }
+  });
 }
+
 async function saoLuuDuLieu() {
   if (confirm("Tạo bản sao lưu ngay?")) {
     var res = await callAPI("backup");
-    if (res.success) Swal.fire("Thành công", res.message, "success");
+    if (res && res.success) Swal.fire("Thành công", res.message, "success");
   }
 }
 
@@ -445,8 +479,8 @@ function inBaoCao() {
     tongChi = 0;
   var htmlRows = duLieuTimKiem
     .map((item, index) => {
-      if (item.loai === "Thu") tongThu += item.tien;
-      else tongChi += item.tien;
+      if (item.loai === "Thu") tongThu += parseInt(item.tien || 0);
+      else tongChi += parseInt(item.tien || 0);
       var hienThiTien =
         item.hangMuc === "Tài trợ hiện vật"
           ? "Hiện vật"
@@ -456,7 +490,7 @@ function inBaoCao() {
     .join("");
   var win = window.open("", "", "height=700,width=900");
   win.document.write(
-    `<html><head><title>IN BÁO CÁO</title><style>body{font-family:"Times New Roman",serif; padding:20px;} table{width:100%; border-collapse:collapse; margin-top:20px;} th,td{border:1px solid #000; padding:8px; font-size:13px;} th{background:#f0f0f0;} .text-center{text-align:center} .text-end{text-align:right} .bold{font-weight:bold}</style></head><body><div class="text-center"><h2>BÁO CÁO THU CHI</h2><i>(Từ ngày ${tuNgay} đến ngày ${denNgay})</i></div><table><thead><tr><th>STT</th><th>Ngày</th><th>Nội dung</th><th>Thu</th><th>Chi</th></tr></thead><tbody>${htmlRows}<tr style="font-weight:bold; background:#fafafa;"><td colspan="3" class="text-center">TỔNG CỘNG TIỀN MẶT</td><td class="text-end">${new Intl.NumberFormat("vi-VN").format(tongThu)}</td><td class="text-end">${new Intl.NumberFormat("vi-VN").format(tongChi)}</td></tr></tbody></table></body></html>`,
+    `<html><head><title>IN BÁO CÁO</title><style>body{font-family:"Times New Roman",serif; padding:20px;} table{width:100%; border-collapse:collapse; margin-top:20px;} th,td{border:1px solid #000; padding:8px; font-size:13px;} th{background:#f0f0f0;} .text-center{text-align:center} .text-end{text-align:right} .bold{font-weight:bold}</style></head><body><div class="text-center"><h2>BÁO CÁO THU CHI QŨY CLB</h2><i>(Từ ngày ${tuNgay} đến ngày ${denNgay})</i></div><table><thead><tr><th>STT</th><th>Ngày</th><th>Nội dung</th><th>Thu</th><th>Chi</th></tr></thead><tbody>${htmlRows}<tr style="font-weight:bold; background:#fafafa;"><td colspan="3" class="text-center">TỔNG CỘNG TIỀN MẶT</td><td class="text-end">${new Intl.NumberFormat("vi-VN").format(tongThu)}</td><td class="text-end">${new Intl.NumberFormat("vi-VN").format(tongChi)}</td></tr></tbody></table></body></html>`,
   );
   win.document.close();
   win.print();

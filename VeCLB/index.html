@@ -82,7 +82,7 @@
     <div class="header-banner text-center position-relative">
       <a
         href="../index.html"
-        class="btn btn-sm btn-light position-absolute start-0 top-0 mt-3 ms-3 rounded-pill shadow-sm text-dark fw-bold"
+        class="btn btn-sm btn-light position-absolute start-0 top-0 mt-3 m-3 rounded-pill shadow-sm text-dark fw-bold"
       >
         <i class="fas fa-arrow-left me-1"></i> Trang chủ
       </a>
@@ -152,33 +152,36 @@
             >
               <h6 class="fw-bold text-warning mb-2">
                 <i class="fas fa-user-shield me-2"></i>Bảng điều khiển Admin:
-                Cập nhật file Quy chế
+                Cấu hình link Quy chế
               </h6>
               <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white text-muted"
+                  ><i class="fas fa-link"></i
+                ></span>
                 <input
-                  type="file"
+                  type="text"
                   class="form-control"
-                  id="fileQuyChePdf"
-                  accept=".pdf"
+                  id="txtLinkQuyChe"
+                  placeholder="Dán link chia sẻ file PDF Quy chế từ Google Drive vào đây..."
                 />
                 <button
                   class="btn btn-warning fw-bold"
                   type="button"
-                  onclick="taiLenQuyChePdf()"
+                  onclick="capNhatLinkQuyChe()"
                 >
-                  <i class="fas fa-upload me-1"></i> Tải lên PDF
+                  <i class="fas fa-save me-1"></i> Lưu cấu hình
                 </button>
               </div>
               <div class="small text-muted mt-1">
-                * Hệ thống tự động ghi đè tệp cũ và hiển thị trực tuyến file
-                mới.
+                * Sau khi dán link Google Drive, hệ thống sẽ tự động cấu hình
+                tối ưu để hội viên đọc được trực tuyến ngay lập tức.
               </div>
             </div>
 
             <div id="khungHienThiQuyChe" class="text-center py-4">
               <div class="spinner-border text-secondary mb-2"></div>
               <div class="text-muted fst-italic small">
-                Đang kết nối kho dữ liệu tệp tin...
+                Đang tải tệp quy chế hoạt động từ CSDL Firebase...
               </div>
             </div>
           </div>
@@ -253,8 +256,9 @@
               >
                 <span
                   class="position-absolute top-50 start-0 translate-middle-y ps-3 text-muted"
-                  ><i class="fas fa-search"></i
-                ></span>
+                >
+                  <i class="fas fa-search"></i>
+                </span>
                 <input
                   type="text"
                   id="timKiemHoiVien"
@@ -312,7 +316,7 @@
                       colspan="6"
                       class="text-center py-4 text-muted fst-italic"
                     >
-                      Đang tải danh sách thành viên từ máy chủ...
+                      Đang tải danh sách thành viên từ CSDL Firebase...
                     </td>
                   </tr>
                 </tbody>
@@ -322,6 +326,7 @@
         </div>
       </div>
     </div>
+
     <div
       class="modal fade"
       id="modalDangKyHoiVien"
@@ -356,7 +361,7 @@
               </div>
               <div class="mb-3">
                 <label class="form-label fw-bold text-dark"
-                  >Số điện thoại liên hệ (số dùng Zalo)
+                  >Số điện thoại liên hệ (Zalo)
                   <span class="text-danger">*</span></label
                 >
                 <input
@@ -391,6 +396,7 @@
         </div>
       </div>
     </div>
+
     <div
       class="modal fade"
       id="modalSuaHoiVien"
@@ -412,7 +418,6 @@
           <div class="modal-body p-4">
             <form id="formSuaHoiVien" onsubmit="xuLySuaHoiVien(event)">
               <input type="hidden" id="sua_id" />
-
               <div class="mb-3">
                 <label class="form-label fw-bold text-dark">Họ và tên</label>
                 <input
@@ -466,9 +471,12 @@
         </div>
       </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script src="../config.js"></script>
     <script src="script.js"></script>
