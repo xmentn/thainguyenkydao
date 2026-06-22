@@ -1,81 +1,27 @@
+/* --- 1. CẤU HÌNH NỀN & PHÔNG CHỮ TỔNG THỂ --- */
 body {
-  background-color: #eef2f6;
-  font-family: "Segoe UI", sans-serif;
+  background-color: #f8fafc;
+  font-family:
+    "Segoe UI",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  color: #334155;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
-/* Header & Card */
-.header {
-  background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
-  color: white;
-  padding: 20px 15px;
-  border-radius: 0 0 25px 25px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  position: relative;
-}
-
-.card-box {
-  border-radius: 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  border: none;
-  background: white;
-  transition: transform 0.2s;
-}
-
-/* Menu Buttons */
-.btn-menu {
-  width: 100%;
-  height: 60px;
-  margin-bottom: 12px;
-  border-radius: 12px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  border: none;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-}
-
-/* Layout */
-#login-container {
-  max-width: 400px;
-  margin: 40px auto;
-  padding: 20px;
-}
 #app-container,
 #view-form,
-#view-search {
+#view-search,
+#login-container {
   display: none;
 }
 .admin-only {
   display: none !important;
 }
-.chart-container {
-  position: relative;
-  height: 200px;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
 
-/* Logo */
-.logo-login {
-  width: 130px;
-  height: 130px;
-  object-fit: cover;
-  border-radius: 50%;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  border: 4px solid white;
-}
-.logo-header {
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.8);
-}
-
-/* Loading Overlay (Khi gọi API) */
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -92,102 +38,150 @@ body {
 .loading-overlay.active {
   visibility: visible;
 }
-/* --- GIAO DIỆN SẢNH CHÍNH (TRANG CHỦ CLB) --- */
+
+/* --- 2. THANH ĐIỀU HƯỚNG TRẢN RỘNG (NAVBAR) --- */
+.navbar {
+  border-bottom: 1px solid #f1f5f9;
+  width: 100%;
+}
+.navbar .nav-link {
+  font-size: 14.5px;
+  padding: 6px 14px !important;
+  transition: color 0.2s ease;
+  cursor: pointer; /* Thay đổi con trỏ chuột khi hover qua menu trên cùng */
+}
+.navbar .nav-link:hover,
+.navbar .nav-link.active {
+  color: #198754 !important;
+}
+
+/* --- 3. KHỐI HIỂN THỊ BANNER ĐẦY 100% CHIỀU NGANG --- */
 #home-container {
-  max-width: 800px;
-  margin: 40px auto;
-  padding: 20px;
-  animation: fadeIn 0.5s ease-in-out;
+  animation: fadeIn 0.5s ease-in-out forwards;
+  width: 100%;
+}
+.banner-fluid-wrapper {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+.banner-fluid-wrapper img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.content-wrapper-fluid {
+  padding: 40px 40px 0 40px;
 }
 
-/* --- THIẾT KẾ THẺ CHIA ĐÔI CAO CẤP (TOP BANNER COLOR / BOTTOM WHITE) --- */
-.module-card {
+/* --- 4. THIẾT KẾ THẺ TÍNH NĂNG PHẲNG HIỆN ĐẠI --- */
+#home-container a.text-decoration-none {
+  color: inherit;
+  display: block;
+}
+.feature-card {
+  border-radius: 16px !important;
   background: #ffffff;
-  border-radius: 20px !important;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  position: relative;
-  overflow: hidden; /* Bắt buộc để khối màu nửa trên không đè mất góc bo tròn */
-  box-shadow: 0 10px 25px rgba(13, 71, 161, 0.04) !important;
-  display: flex;
-  flex-direction: column;
+  transition:
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.3s ease;
 }
-
-/* Hiệu ứng nhấc thẻ lên khi di chuột vào */
-.module-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 35px rgba(13, 71, 161, 0.12) !important;
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08) !important;
 }
-
-/* Nửa khối trên: Chiếm trọn không gian màu nền và căn giữa biểu tượng */
-.card-top-split {
-  height: 95px; /* Chiều cao khối màu trên điện thoại */
+.icon-shape {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
-  color: #ffffff;
+  font-size: 20px;
+}
+.bg-success-light {
+  background-color: #e8f5e9;
+}
+.text-success-dark {
+  color: #1b5e20;
+}
+.bg-warning-light {
+  background-color: #fff3e0;
+}
+.text-warning-dark {
+  color: #e65100;
+}
+.text-warning {
+  color: #ff9800 !important;
+}
+.bg-primary-light {
+  background-color: #e3f2fd;
+}
+.text-primary-dark {
+  color: #0d47a1;
+}
+.bg-purple-light {
+  background-color: #f3e5f5;
+}
+.text-purple-dark {
+  color: #4a148c;
+}
+.text-purple {
+  color: #9c27b0;
 }
 
-@media (min-width: 576px) {
-  .card-top-split {
-    height: 120px; /* Chiều cao khối màu trên máy tính */
-    font-size: 36px; /* Icon to rõ nét hơn */
-  }
+.btn-action {
+  font-size: 14px;
+  border: none;
+  background: none;
+  box-shadow: none !important;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.btn-action i {
+  transition: transform 0.2s ease;
+}
+.btn-action:hover i {
+  transform: translateX(4px);
 }
 
-.card-top-split i {
-  transition: transform 0.35s ease;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
-}
-
-/* Hiệu ứng phóng to xoay nhẹ biểu tượng khi hover */
-.module-card:hover .card-top-split i {
-  transform: scale(1.15) rotate(5deg);
-}
-
-/* Nửa khối dưới: Nền trắng tinh khôi chứa thông tin chữ */
-.module-card .card-body {
-  flex: 1;
+/* --- 5. THANH THỐNG KÊ SỐ LIỆU ĐÁY PHẲNG RỘNG --- */
+.stats-bar {
+  border-radius: 16px !important;
   background: #ffffff;
+  width: 100%;
+}
+.stats-icon {
+  width: 44px;
+  height: 44px;
+  background-color: #f1f5f9;
+  border-radius: 50%;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
-.card-title-custom {
-  font-size: 15px;
-  letter-spacing: 0.5px;
-}
-@media (min-width: 576px) {
-  .card-title-custom {
-    font-size: 18px;
+@media (min-width: 768px) {
+  .split-divider > div:not(:last-child) {
+    border-right: 1px solid #e2e8f0;
   }
 }
 
-/* --- HỆ THỐNG MÀU GRADIENT ĐỔ TRỌN BANNER TRÊN --- */
-.bg-giai-dau {
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-}
-
-.bg-quy-clb {
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-}
-
-.bg-ky-thu {
-  background: linear-gradient(135deg, #ff9900 0%, #ff5500 100%);
-}
-
-.bg-ve-clb {
-  background: linear-gradient(135deg, #614385 0%, #516395 100%);
-}
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* --- 6. CÂN CHỈNH TRÊN THIẾT BỊ DI ĐỘNG --- */
+@media (max-width: 767px) {
+  .content-wrapper-fluid {
+    padding: 24px 16px 0 16px;
   }
 }

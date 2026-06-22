@@ -13,24 +13,27 @@ if (typeof Chart !== "undefined" && ChartDataLabels) {
   Chart.register(ChartDataLabels);
 }
 
-// Kiểm tra trạng thái đăng nhập khi mở trang
+// KHÔI PHỤC LOGIC GỐC: Kiểm tra trạng thái đăng nhập bảo mật ngay khi mở tệp
 document.addEventListener("DOMContentLoaded", function () {
   startClock();
 
-  // Nếu đã đăng nhập thì vào thẳng App, chưa thì hiện form Login
   if (QUYEN_HAN !== "") {
+    // Phiên làm việc hợp lệ -> Vào thẳng ứng dụng quỹ
     document.getElementById("login-container").style.display = "none";
     document.getElementById("app-container").style.display = "block";
-    let activeName = getUserName() ? getUserName().replace(" Xem", "") : "...";
+    let activeName = getUserName()
+      ? getUserName().replace(" Xem", "")
+      : "Thành viên";
     document.getElementById("user-name").innerText = activeName;
     phanQuyenGiaoDien();
     khoiTaoApp();
   } else {
+    // Chưa có phiên đăng nhập -> Chuyển hướng bắt buộc ra Form Đăng nhập
     document.getElementById("login-container").style.display = "block";
     document.getElementById("app-container").style.display = "none";
   }
 
-  // Logic đổi input Hạng mục hiện vật
+  // Logic đổi cấu trúc input khi chọn Hạng mục Hiện vật
   var selectHangMuc = document.getElementById("hangMuc");
   if (selectHangMuc) {
     selectHangMuc.addEventListener("change", function () {
@@ -57,21 +60,22 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// Xử lý đăng nhập đồng bộ phân quyền hệ thống
+// Xử lý xác thực Đăng nhập tài khoản đồng bộ từ Firebase Firestore
 async function xuLyDangNhap(event) {
   event.preventDefault();
   const u = document.getElementById("username").value.trim();
   const p = document.getElementById("password").value.trim();
 
   Swal.fire({
-    title: "Đang xác thực...",
+    title: "Đang kiểm tra thông tin...",
     didOpen: () => Swal.showLoading(),
     allowOutsideClick: false,
   });
+
   const res = await callAPI("login", { username: u, password: p });
 
   if (res && res.success) {
-    // Lưu thông tin vào Session để các phân hệ khác cùng dùng chung
+    // Duy trì phiên làm việc vào Session cho toàn bộ trang dự án
     sessionStorage.setItem("QUYEN_HAN", res.role);
     sessionStorage.setItem("USER_NAME", res.name);
     QUYEN_HAN = res.role;
@@ -98,18 +102,18 @@ async function xuLyDangNhap(event) {
   } else {
     Swal.fire(
       "Đăng nhập thất bại",
-      "Sai tên đăng nhập hoặc mật khẩu quản trị!",
+      "Sai tài khoản đăng nhập hoặc mật khẩu quản trị không đúng!",
       "error",
     );
   }
 }
 
-// Ẩn/Hiện nút thông minh dựa theo vai trò phân quyền thực tế
+// Hàm phân quyền thông minh: Ẩn các chức năng nhạy cảm nếu không phải Admin/Thủ quỹ
 function phanQuyenGiaoDien() {
   const isAdminOrThuQuy = QUYEN_HAN === "admin" || QUYEN_HAN === "thuquy";
   document.querySelectorAll(".admin-only").forEach((el) => {
     if (isAdminOrThuQuy) {
-      el.style.setProperty("display", "flex", "important");
+      el.style.setProperty("display", "inline-block", "important");
     } else {
       el.style.setProperty("display", "none", "important");
     }
@@ -151,7 +155,7 @@ async function taiDuLieuBaoCao() {
     hienThiRank = 1;
   if (!top10 || top10.length === 0)
     listHTML =
-      '<li class="list-group-item text-center small text-muted">Chưa có dữ liệu</li>';
+      '<li class="list-group-item text-center small text-muted py-3">Chưa có dữ liệu</li>';
   else
     top10.forEach((item, i) => {
       if (i > 0 && item.tien < top10[i - 1].tien) hienThiRank = i + 1;
@@ -164,7 +168,7 @@ async function taiDuLieuBaoCao() {
               ? "🥉"
               : `<span class="badge bg-light text-secondary rounded-circle">${hienThiRank}</span>`;
       var bg = hienThiRank === 1 ? "bg-warning bg-opacity-10" : "";
-      listHTML += `<li class="list-group-item d-flex justify-content-between align-items-center ${bg} py-2"><div class="d-flex align-items-center"><div class="me-2 text-center" style="width:25px">${icon}</div><div class="fw-bold small">${item.ten}</div></div><span class="fw-bold text-primary small">${fmt.format(item.tien)}</span></li>`;
+      listHTML += `<li class="list-group-item d-flex justify-content-between align-items-center ${bg} py-2"><div class="d-flex align-items-center"><div class="me-2 text-center" style="width:25px">${icon}</div><div class="fw-bold small text-dark">${item.ten}</div></div><span class="fw-bold text-success small">${fmt.format(item.tien)}</span></li>`;
     });
   document.getElementById("list-top10").innerHTML = listHTML;
 
@@ -213,6 +217,7 @@ function veBieuDoTron(thu, chi) {
   });
 }
 
+// Biểu đồ hình tròn phân tách nguồn thu vào CLB
 function veBieuDoNguonThu(data) {
   var ctx = document.getElementById("bieuDoNguonThu").getContext("2d");
   if (chart2) chart2.destroy();
@@ -263,9 +268,9 @@ function veBieuDoNguonThu(data) {
 }
 
 function chuyenManHinh(mh) {
-  ["dashboard", "form", "search"].forEach(
-    (id) => (document.getElementById("view-" + id).style.display = "none"),
-  );
+  ["dashboard", "form", "search"].forEach((id) => {
+    document.getElementById("view-" + id).style.display = "none";
+  });
   document.getElementById("view-" + mh).style.display = "block";
   if (mh === "dashboard") taiDuLieuBaoCao();
 }
@@ -308,7 +313,7 @@ async function thucHienTimKiem() {
     btnMore = document.getElementById("btnXemTiepContainer");
 
   divKetQua.innerHTML =
-    '<div class="text-center mt-3 spinner-border text-primary"></div>';
+    '<div class="text-center mt-3 spinner-border text-success"></div>';
   divTongHop.innerHTML = "";
   if (btnMore) btnMore.style.display = "none";
   document.getElementById("btnIn").disabled = true;
@@ -317,7 +322,7 @@ async function thucHienTimKiem() {
     tu: tu,
     den: den,
     loai: loai,
-    ten: ten,
+    text: ten,
   });
   duLieuTimKiem = data;
   document.getElementById("btnIn").disabled = !data || data.length === 0;
@@ -345,9 +350,9 @@ async function thucHienTimKiem() {
     style: "currency",
     currency: "VND",
   });
-  divTongHop.innerHTML = `<div class="card card-box bg-primary bg-opacity-10 border-0 p-3 mb-3"><div class="row text-center"><div class="col-4 border-end border-primary"><small class="text-primary fw-bold text-uppercase">Số phiếu</small><div class="h5 fw-bold text-dark mb-0">${soPhieu}</div></div><div class="col-4 border-end border-primary"><small class="text-primary fw-bold text-uppercase">Hiện vật</small><div class="h5 fw-bold text-dark mb-0">${soHienVat}</div></div><div class="col-4"><small class="text-primary fw-bold text-uppercase">Tổng tiền</small><div class="h5 fw-bold text-danger mb-0">${fmt.format(tongTien)}</div></div></div>${soHienVat > 0 ? `<div class="mt-2 text-center small text-muted fst-italic border-top border-primary pt-2">🎁 Hiện vật: ${chiTietHienVat.join(", ")}...</div>` : ""}</div>`;
+  divTongHop.innerHTML = `<div class="card card-box bg-success bg-opacity-10 border-0 p-3 mb-3" style="border-radius:12px;"><div class="row text-center"><div class="col-4 border-end border-success"><small class="text-success fw-bold text-uppercase">Số phiếu</small><div class="h5 fw-bold text-dark mb-0">${soPhieu}</div></div><div class="col-4 border-end border-success"><small class="text-success fw-bold text-uppercase">Hiện vật</small><div class="h5 fw-bold text-dark mb-0">${soHienVat}</div></div><div class="col-4"><small class="text-success fw-bold text-uppercase">Tổng tiền</small><div class="h5 fw-bold text-danger mb-0">${fmt.format(tongTien)}</div></div></div>${soHienVat > 0 ? `<div class="mt-2 text-center small text-muted fst-italic border-top border-success pt-2">🎁 Hiện vật: ${chiTietHienVat.join(", ")}...</div>` : ""}</div>`;
 
-  divKetQua.innerHTML = `<div class="card card-box p-0 overflow-hidden"><table class="table mb-0 table-hover"><thead class="bg-light"><tr><th class="ps-3">Ngày</th><th>Nội dung</th><th class="text-end">Số tiền</th><th class="text-center">#</th></tr></thead><tbody id="tableBody"></tbody></table></div>`;
+  divKetQua.innerHTML = `<div class="card card-box p-0 overflow-hidden border-0 shadow-sm" style="border-radius:12px;"><table class="table mb-0 table-hover"><thead class="table-light"><tr><th class="ps-3">Ngày</th><th>Nội dung</th><th class="text-end">Số tiền</th><th class="text-center">#</th></tr></thead><tbody id="tableBody"></tbody></table></div>`;
   currentIndex = 0;
   xemThequyetKetQua();
 }
@@ -359,7 +364,8 @@ function xemThequyetKetQua() {
     htmlRows = "";
 
   nextBatch.forEach((item) => {
-    var actionButtons = '<i class="fas fa-lock text-muted"></i>';
+    var actionButtons = '<i class="fas fa-lock text-muted small"></i>';
+    // ĐÃ SỬA: Phân quyền nút Sửa/Xóa biên lai dựa vào vai trò quản trị thực tế của phiên đăng nhập Firebase
     if (QUYEN_HAN === "admin" || QUYEN_HAN === "thuquy") {
       var itemStr = JSON.stringify(item).replace(/"/g, "&quot;");
       actionButtons = `<button class="btn btn-sm text-primary p-0 me-3" onclick="moModalSua(${itemStr})"><i class="fas fa-edit"></i></button><button class="btn btn-sm text-danger p-0" onclick="xoaItem('${item.id}')"><i class="fas fa-trash"></i></button>`;
@@ -369,7 +375,7 @@ function xemThequyetKetQua() {
         ? '<span class="badge bg-info text-dark">Hiện vật</span>'
         : new Intl.NumberFormat("vi-VN").format(item.tien);
     var classMau = item.loai === "Thu" ? "text-success" : "text-danger";
-    htmlRows += `<tr><td class="ps-3 small text-muted">${new Date(item.ngay).toLocaleDateString("vi-VN")}</td><td><div class="fw-bold small">${item.hangMuc}</div><div class="text-muted fst-italic" style="font-size:11px">${item.nguoi}</div>${item.hangMuc === "Tài trợ hiện vật" ? `<div class="text-success small"><i class="fas fa-gift me-1"></i>${item.ghiChu}</div>` : ""}</td><td class="text-end fw-bold small ${classMau}">${hienThiTien}</td><td class="text-center">${actionButtons}</td></tr>`;
+    htmlRows += `<tr><td class="ps-3 small text-muted">${new Date(item.ngay).toLocaleDateString("vi-VN")}</td><td><div class="fw-bold small text-dark">${item.hangMuc}</div><div class="text-muted fst-italic" style="font-size:11px">${item.nguoi}</div>${item.hangMuc === "Tài trợ hiện vật" ? `<div class="text-success small"><i class="fas fa-gift me-1"></i>${item.ghiChu}</div>` : ""}</td><td class="text-end fw-bold small ${classMau}">${hienThiTien}</td><td class="text-center">${actionButtons}</td></tr>`;
   });
   tableBody.insertAdjacentHTML("beforeend", htmlRows);
   currentIndex += nextBatch.length;
@@ -384,7 +390,6 @@ function xemThequyetKetQua() {
   }
 }
 
-// Gọi bí danh cho hàm đồng bộ
 function xemThemKetQua() {
   xemThequyetKetQua();
 }
