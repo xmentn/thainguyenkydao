@@ -54,7 +54,13 @@ async function callAPI(action, params = {}) {
     let result = null;
 
     // --- 1. XỬ LÝ ĐĂNG NHẬP (FIREBASE) ---
+    // --- 1. XỬ LÝ ĐĂNG NHẬP (FIREBASE) ---
+    // ============================================================
+    // --- XỬ LÝ ĐĂNG NHẬP CHUẨN THEO CSDL TRƯỜNG CHỮ THƯỜNG ---
+    // ============================================================
     if (action === "login") {
+      // 1. "TaiKhoan" là tên Collection (chữ T viết hoa theo như ảnh trước đó)
+      // 2. "taiKhoan" và "matKhau" là tên Field (chữ t và m viết thường theo đúng ảnh mới nhất)
       const snapshot = await db
         .collection("TaiKhoan")
         .where("taiKhoan", "==", params.username)
@@ -65,8 +71,8 @@ async function callAPI(action, params = {}) {
         let userData = snapshot.docs[0].data();
         result = {
           success: true,
-          role: userData.quyenHan,
-          name: userData.hoTen,
+          role: userData.quyenHan, // Chữ q viết thường theo đúng ảnh CSDL
+          name: userData.hoTen, // Chữ h viết thường theo đúng ảnh CSDL
         };
       } else {
         result = { success: false };

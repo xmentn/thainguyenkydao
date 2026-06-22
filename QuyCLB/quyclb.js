@@ -75,10 +75,12 @@ async function xuLyDangNhap(event) {
   const res = await callAPI("login", { username: u, password: p });
 
   if (res && res.success) {
-    // Duy trì phiên làm việc vào Session cho toàn bộ trang dự án
-    sessionStorage.setItem("QUYEN_HAN", res.role);
+    // Ép kiểu chữ thường toàn bộ quyền hạn để tránh lỗi lệch pha cấu trúc chữ hoa/thường
+    const userRole = String(res.role).toLowerCase().trim();
+
+    sessionStorage.setItem("QUYEN_HAN", userRole);
     sessionStorage.setItem("USER_NAME", res.name);
-    QUYEN_HAN = res.role;
+    QUYEN_HAN = userRole; // Cập nhật biến toàn cục tức thì
 
     let cleanName = res.name.replace(" Xem", "");
     document.getElementById("user-name").innerText = cleanName;
@@ -110,7 +112,12 @@ async function xuLyDangNhap(event) {
 
 // Hàm phân quyền thông minh: Ẩn các chức năng nhạy cảm nếu không phải Admin/Thủ quỹ
 function phanQuyenGiaoDien() {
-  const isAdminOrThuQuy = QUYEN_HAN === "admin" || QUYEN_HAN === "thuquy";
+  // Lấy trực tiếp từ sessionStorage để đảm bảo tính thời gian thực sau khi nhấn Đăng nhập
+  const currentRole = String(sessionStorage.getItem("QUYEN_HAN"))
+    .toLowerCase()
+    .trim();
+  const isAdminOrThuQuy = currentRole === "admin" || currentRole === "thuquy";
+
   document.querySelectorAll(".admin-only").forEach((el) => {
     if (isAdminOrThuQuy) {
       el.style.setProperty("display", "inline-block", "important");
@@ -119,7 +126,6 @@ function phanQuyenGiaoDien() {
     }
   });
 }
-
 function khoiTaoApp() {
   taiDuLieuBaoCao();
   var today = new Date();
@@ -363,13 +369,21 @@ function xemThequyetKetQua() {
   var nextBatch = duLieuTimKiem.slice(currentIndex, currentIndex + pageSize),
     htmlRows = "";
 
+  // Đọc lại quyền hạn chuẩn xác để render nút
+  const currentRole = String(sessionStorage.getItem("QUYEN_HAN"))
+    .toLowerCase()
+    .trim();
+  const isAdminOrThuQuy = currentRole === "admin" || currentRole === "thuquy";
+
   nextBatch.forEach((item) => {
     var actionButtons = '<i class="fas fa-lock text-muted small"></i>';
-    // ĐÃ SỬA: Phân quyền nút Sửa/Xóa biên lai dựa vào vai trò quản trị thực tế của phiên đăng nhập Firebase
-    if (QUYEN_HAN === "admin" || QUYEN_HAN === "thuquy") {
+
+    // Đồng bộ mở quyền Sửa/Xóa biên lai cho cả admin và thuquy
+    if (isAdminOrThuQuy) {
       var itemStr = JSON.stringify(item).replace(/"/g, "&quot;");
       actionButtons = `<button class="btn btn-sm text-primary p-0 me-3" onclick="moModalSua(${itemStr})"><i class="fas fa-edit"></i></button><button class="btn btn-sm text-danger p-0" onclick="xoaItem('${item.id}')"><i class="fas fa-trash"></i></button>`;
     }
+
     var hienThiTien =
       item.hangMuc === "Tài trợ hiện vật"
         ? '<span class="badge bg-info text-dark">Hiện vật</span>'
@@ -377,6 +391,7 @@ function xemThequyetKetQua() {
     var classMau = item.loai === "Thu" ? "text-success" : "text-danger";
     htmlRows += `<tr><td class="ps-3 small text-muted">${new Date(item.ngay).toLocaleDateString("vi-VN")}</td><td><div class="fw-bold small text-dark">${item.hangMuc}</div><div class="text-muted fst-italic" style="font-size:11px">${item.nguoi}</div>${item.hangMuc === "Tài trợ hiện vật" ? `<div class="text-success small"><i class="fas fa-gift me-1"></i>${item.ghiChu}</div>` : ""}</td><td class="text-end fw-bold small ${classMau}">${hienThiTien}</td><td class="text-center">${actionButtons}</td></tr>`;
   });
+
   tableBody.insertAdjacentHTML("beforeend", htmlRows);
   currentIndex += nextBatch.length;
   if (btnMore) {
@@ -388,10 +403,6 @@ function xemThequyetKetQua() {
       btnMore.style.display = "none";
     }
   }
-}
-
-function xemThemKetQua() {
-  xemThequyetKetQua();
 }
 
 function moModalSua(item) {
