@@ -36,10 +36,7 @@
             class="navbar-nav align-items-center gap-2 w-100 justify-content-center"
           >
             <li class="nav-item">
-              <a
-                class="nav-link active fw-bold text-success"
-                href="#"
-                onclick="veTrangChuCLB()"
+              <a class="nav-link active fw-bold text-success" href="#"
                 >Trang chủ</a
               >
             </li>
@@ -47,7 +44,6 @@
               <a
                 class="nav-link fw-semibold text-secondary"
                 href="Giaidau/index.html"
-                onclick="moGiaiDau()"
                 >Giải đấu</a
               >
             </li>
@@ -55,7 +51,6 @@
               <a
                 class="nav-link fw-semibold text-secondary"
                 href="QuyCLB/index.html"
-                onclick="moQuanLyQuy()"
                 >Quỹ CLB</a
               >
             </li>
@@ -83,14 +78,6 @@
                 >Liên hệ</a
               >
             </li>
-            <li class="nav-item ms-lg-4">
-              <button
-                class="btn btn-success px-3 py-2 rounded-3 fw-semibold small"
-                onclick="moQuanLyQuy()"
-              >
-                <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập
-              </button>
-            </li>
           </ul>
         </div>
       </div>
@@ -110,7 +97,6 @@
           <div class="col-12 col-sm-6 col-md-6 col-lg-3">
             <a
               href="Giaidau/index.html"
-              onclick="moGiaiDau()"
               class="text-decoration-none d-block h-100"
             >
               <div class="card feature-card h-100 border-0 shadow-sm p-4">
@@ -140,7 +126,7 @@
                 <div class="icon-shape bg-warning-light text-warning mb-4">
                   <i class="fas fa-user-friends"></i>
                 </div>
-                <h5 class="fw-bold text-warning-dark mb-2">QUẢN LÝ KỲ THỦ</h5>
+                <h5 class="fw-bold text-warning-dark mb-2">QUẢN LÝ KÝ THỦ</h5>
                 <p class="text-muted small flex-grow-1 mb-0">
                   Hồ sơ kỳ thủ, bảng xếp hạng và thống kê thành tích chi tiết.
                 </p>
@@ -156,7 +142,6 @@
           <div class="col-12 col-sm-6 col-md-6 col-lg-3">
             <a
               href="QuyCLB/index.html"
-              onclick="moQuanLyQuy()"
               class="text-decoration-none d-block h-100"
             >
               <div class="card feature-card h-100 border-0 shadow-sm p-4">
@@ -217,7 +202,9 @@
                   <i class="fas fa-users text-success fs-4"></i>
                 </div>
                 <div class="text-start">
-                  <h4 class="fw-bold text-dark mb-0">150+</h4>
+                  <h4 class="fw-bold text-dark mb-0" id="txtThongKeHoiVien">
+                    ...
+                  </h4>
                   <small
                     class="text-muted text-uppercase tracking-wider"
                     style="font-size: 11px"
@@ -234,7 +221,9 @@
                   <i class="fas fa-trophy text-success fs-4"></i>
                 </div>
                 <div class="text-start">
-                  <h4 class="fw-bold text-dark mb-0">20+</h4>
+                  <h4 class="fw-bold text-dark mb-0" id="txtThongKeGiaiDau">
+                    ...
+                  </h4>
                   <small
                     class="text-muted text-uppercase tracking-wider"
                     style="font-size: 11px"
@@ -251,7 +240,7 @@
                   <i class="fas fa-handshake text-success fs-4"></i>
                 </div>
                 <div class="text-start">
-                  <h4 class="fw-bold text-dark mb-0">10+</h4>
+                  <h4 class="fw-bold text-dark mb-0">...+</h4>
                   <small
                     class="text-muted text-uppercase tracking-wider"
                     style="font-size: 11px"
@@ -291,6 +280,9 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="config.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

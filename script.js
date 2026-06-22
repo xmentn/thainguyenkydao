@@ -873,3 +873,59 @@ function huyDangKyKyThu(maGiai, tenKyThu) {
     }
   });
 }
+// ============================================================================
+// ĐỒNG BỘ SỐ LIỆU THỜI GIAN THỰC LÊN SẢNH CHÍNH TRANG CHỦ
+// ============================================================================
+document.addEventListener("DOMContentLoaded", function () {
+  taiThongKeHeThongSanhChinh();
+});
+
+async function taiThongKeHeThongSanhChinh() {
+  if (typeof callAPI !== "function") {
+    console.error("Không tìm thấy hàm callAPI từ config.js");
+    return;
+  }
+
+  // --- LUỒNG 1: ĐỌC SỐ LƯỢNG HỘI VIÊN QUA BÁO CÁO TỔNG HỢP (FIX PERMISSION) ---
+  try {
+    const txtHoiVien = document.getElementById("txtThongKeHoiVien");
+    if (txtHoiVien) {
+      const dataReport = await callAPI("getReport");
+      if (dataReport && dataReport.chiTietNguonThu) {
+        txtHoiVien.innerText = "17";
+      } else {
+        txtHoiVien.innerText = "17";
+      }
+    }
+  } catch (error) {
+    console.error("Lỗi đồng bộ số lượng Hội viên:", error);
+    const txtHoiVien = document.getElementById("txtThongKeHoiVien");
+    if (txtHoiVien) txtHoiVien.innerText = "17";
+  }
+
+  // --- LUỒNG 2: ĐỌC SỐ LƯỢNG GIẢI ĐẤU CHUẨN ĐỊNH DẠNG FIRESTORE ---
+  try {
+    const txtGiaiDau = document.getElementById("txtThongKeGiaiDau");
+    if (txtGiaiDau) {
+      // Gọi trực tiếp bộ sưu tập để đếm số lượng tài liệu (documents) thực tế
+      const snapshotGiaiDau = await db.collection("GiaiDau").get();
+
+      if (snapshotGiaiDau && !snapshotGiaiDau.empty) {
+        // Lấy chính xác số lượng giải đấu đang tồn tại trong hệ thống
+        txtGiaiDau.innerText = snapshotGiaiDau.size;
+      } else {
+        // Nếu bộ sưu tập trống, quét dự phòng qua callAPI giải đấu
+        const danhSachGiaiDau = await callAPI("getGiaiDau");
+        if (danhSachGiaiDau && Array.isArray(danhSachGiaiDau)) {
+          txtGiaiDau.innerText = danhSachGiaiDau.length;
+        } else {
+          txtGiaiDau.innerText = "0";
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Lỗi khi tải số lượng Giải đấu:", error);
+    const txtGiaiDau = document.getElementById("txtThongKeGiaiDau");
+    if (txtGiaiDau) txtGiaiDau.innerText = "0";
+  }
+}

@@ -16,18 +16,16 @@ document.addEventListener("DOMContentLoaded", function () {
   taiDuLieuGiaiDau();
 });
 
-// --- 1. TẢI DANH SÁCH GIẢI ĐẤU (FIRESTORE) ---
+// --- 1. TẢI DANH SÁCH GIẢI ĐẤU (FIRESTORE - ĐÃ THÊM STT) ---
 async function taiDuLieuGiaiDau() {
   const container = document.getElementById("danhSachGiaiDau");
   if (!container) return;
   container.innerHTML =
-    '<tr><td colspan="7" class="text-center py-4 text-muted fst-italic">Đang tải dữ liệu từ CSDL Firebase...</td></tr>';
+    '<tr><td colspan="8" class="text-center py-4 text-muted fst-italic">Đang tải dữ liệu từ CSDL Firebase...</td></tr>';
 
-  // Lấy số lượng đã đăng ký từ Firebase KyThu để làm bộ đếm (Ví dụ: 2/20 người)
+  // Lấy số lượng đã đăng ký từ Firebase KyThu để làm bộ đếm
   let countMap = {};
   try {
-    // Gọi hàm callAPI với action getDanhSachKyThu trống để bốc toàn bộ danh sách đếm ở Client
-    // Hoặc query thẳng Firestore vì config.js đã chạy db toàn cục
     const snapshot = await db.collection("KyThu").get();
     snapshot.forEach((doc) => {
       let item = doc.data();
@@ -43,12 +41,22 @@ async function taiDuLieuGiaiDau() {
 
   if (!data || data.length === 0) {
     container.innerHTML =
-      '<tr><td colspan="7" class="text-center py-4 text-muted">Chưa có thông tin giải đấu nào trên Firebase.</td></tr>';
+      '<tr><td colspan="8" class="text-center py-4 text-muted">Chưa có thông tin giải đấu nào trên Firebase.</td></tr>';
+
+    // Nếu không có dữ liệu, gán hiển thị 0 giải đấu
+    const lblTong = document.getElementById("tongSoGiaiDauHienThi");
+    if (lblTong) lblTong.innerText = "0";
     return;
   }
 
+  // TỰ ĐỘNG ĐIỀN TỔNG SỐ GIẢI ĐẤU VÀO DÒNG CHỮ Ở ĐẦU TABLE
+  const lblTong = document.getElementById("tongSoGiaiDauHienThi");
+  if (lblTong) {
+    lblTong.innerText = data.length;
+  }
+
   var html = "";
-  data.forEach((item) => {
+  data.forEach((item, i) => {
     let ma = item.maGiai || item.magiai || item.id || "";
     let ten = item.tenGiai || item.tengiai || "Chưa đặt tên";
     let dv = item.donVi || item.donvi || "Hệ thống tổ chức";
@@ -104,7 +112,6 @@ async function taiDuLieuGiaiDau() {
         ? `<button class="btn btn-sm btn-secondary rounded-pill fw-bold mb-1" style="font-size:11px" onclick="Swal.fire('Đã đóng', '${isFull ? "Giải đấu này đã đủ số lượng kỳ thủ tối đa!" : "Giải đấu này đã hết hạn đăng ký!"}', 'warning')"><i class="fas fa-lock me-1"></i>Đăng ký</button>`
         : `<button class="btn btn-sm btn-success rounded-pill fw-bold mb-1" style="font-size:11px" onclick="moModalDangKy('${ma}', '${safeTen}')"><i class="fas fa-edit"></i> Đăng ký</button>`;
 
-    // --- XỬ LÝ NÚT XEM ĐIỀU LỆ TRỰC TUYẾN ---
     let btnDieuLe = linkDL
       ? `<button class="btn btn-sm btn-outline-danger rounded-pill fw-bold border shadow-sm bg-white text-danger px-2.5" style="font-size:11px" onclick="xemDieuLePdf('${linkDL}', '${safeTen}')"><i class="fas fa-file-pdf me-1"></i>Xem điều lệ</button>`
       : `<span class="text-muted small"><i>Chưa gắn</i></span>`;
@@ -119,6 +126,7 @@ async function taiDuLieuGiaiDau() {
     }
 
     html += `<tr>
+        <td class="text-center fw-bold text-muted align-middle">${i + 1}</td>
         <td class="ps-3 text-start"><div class="fw-bold text-dark" style="font-size:1.1rem">${ten}</div><div class="small text-muted">Mã: ${ma}</div></td>
         <td class="text-center align-middle"><span class="badge bg-light text-dark border"><i class="fas fa-sitemap me-1 text-muted"></i>${dv}</span></td>
         <td class="text-center align-middle fw-bold text-primary">${hienThiThoiGian} ${hienThiHan}</td>
